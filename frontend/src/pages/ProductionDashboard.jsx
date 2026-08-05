@@ -3,6 +3,7 @@ import { Eye, FileText, Lock, Printer, RefreshCcw, CheckCircle, Plus, Send, Cloc
 import { useAuth } from "../context/AuthContext";
 import { DocumentViewerModal } from "../components/DocumentViewerModal";
 import { ReprintModal, RequestBmrBprModal } from "../components/ReprintModal";
+import { UploadModal } from "../components/UploadModal";
 
 function renderStatusBadge(statusRaw) {
   const status = (statusRaw || "ISSUED").toUpperCase();
@@ -107,6 +108,7 @@ export function ProductionDashboard() {
   const [isReprintOpen, setIsReprintOpen] = useState(false);
 
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [toast, setToast] = useState("");
 
   useEffect(() => {
@@ -195,24 +197,46 @@ export function ProductionDashboard() {
             </div>
           </div>
 
-        <button
-          onClick={() => setIsRequestModalOpen(true)}
-          className="btn-primary"
-          style={{
-            padding: "0.85rem 1.75rem",
-            fontSize: "1.05rem",
-            fontWeight: 800,
-            borderRadius: "12px",
-            boxShadow: "0 6px 20px rgba(13, 148, 136, 0.35)",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.6rem",
-            letterSpacing: "0.2px"
-          }}
-        >
-          <Plus size={22} strokeWidth={2.5} />
-          Request BMR / BPR Document
-        </button>
+          <button
+            onClick={() => setIsUploadOpen(true)}
+            style={{
+              padding: "0.85rem 1.4rem",
+              background: "linear-gradient(135deg, #F59E0B, #D97706)",
+              color: "white",
+              borderRadius: "12px",
+              fontWeight: 800,
+              fontSize: "0.95rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              boxShadow: "0 6px 20px rgba(245, 158, 11, 0.35)",
+              border: "none",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <Plus size={20} strokeWidth={2.5} />
+            QMS Docs
+          </button>
+
+          <button
+            onClick={() => setIsRequestModalOpen(true)}
+            className="btn-primary"
+            style={{
+              padding: "0.85rem 1.75rem",
+              fontSize: "1.05rem",
+              fontWeight: 800,
+              borderRadius: "12px",
+              boxShadow: "0 6px 20px rgba(13, 148, 136, 0.35)",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.6rem",
+              letterSpacing: "0.2px"
+            }}
+          >
+            <Plus size={22} strokeWidth={2.5} />
+            Request BMR / BPR Document
+          </button>
         </div>
       </div>
 
@@ -420,6 +444,15 @@ export function ProductionDashboard() {
           showToast(msg);
           fetchRequisitions();
           setActiveTab("requests");
+        }}
+      />
+
+      <UploadModal
+        isOpen={isUploadOpen}
+        onClose={() => setIsUploadOpen(false)}
+        onSuccess={() => {
+          showToast("QMS Document issued & saved successfully!");
+          fetchReceivedDocuments();
         }}
       />
     </div>

@@ -32,7 +32,9 @@ export function DocumentViewerModal({ document: doc, isOpen, onClose, onRefresh,
   // Generate field array for View Mode using the EXACT SAME coordinate specification as Edit Mode
   const fields = [];
   const totalDocPages = numPages || doc?.total_pages || doc?.page_count || 78;
-  const presets = getPresetFields(doc?.document_type || "BMR");
+  const activeDocType = (doc?.document_type || "BMR").toUpperCase();
+  const isBmrOrBpr = activeDocType === "BMR" || activeDocType === "BPR";
+  const presets = getPresetFields(activeDocType);
   const batchPreset = presets.find(f => f.fieldName === "batch_number") || { x: 158, y: 134 };
 
   function getDocFieldValue(fName) {
@@ -47,24 +49,26 @@ export function DocumentViewerModal({ document: doc, isOpen, onClose, onRefresh,
     }
   }
 
-  for (let p = 0; p < totalDocPages; p++) {
-    if (p === 0) {
-      fields.push(...presets.map(f => ({ ...f, value: getDocFieldValue(f.fieldName), fontSize: 11 })));
-    } else {
-      fields.push({
-        id: `auto_batch_p${p}`,
-        pageIndex: p,
-        fieldName: "batch_number",
-        label: "BATCH NO",
-        value: doc?.batch_number,
-        x: batchPreset.x,
-        y: batchPreset.y,
-        width: batchPreset.width || 130,
-        height: batchPreset.height || 20,
-        fontSize: 11,
-        isBold: false,
-        color: "#000000",
-      });
+  if (isBmrOrBpr) {
+    for (let p = 0; p < totalDocPages; p++) {
+      if (p === 0) {
+        fields.push(...presets.map(f => ({ ...f, value: getDocFieldValue(f.fieldName), fontSize: 11 })));
+      } else {
+        fields.push({
+          id: `auto_batch_p${p}`,
+          pageIndex: p,
+          fieldName: "batch_number",
+          label: "BATCH NO",
+          value: doc?.batch_number,
+          x: batchPreset.x,
+          y: batchPreset.y,
+          width: batchPreset.width || 130,
+          height: batchPreset.height || 20,
+          fontSize: 11,
+          isBold: false,
+          color: "#000000",
+        });
+      }
     }
   }
 
@@ -411,20 +415,59 @@ export function DocumentViewerModal({ document: doc, isOpen, onClose, onRefresh,
                 </button>
               </div>
             )
-          ) : (
-            <span style={{
-              fontSize: "0.78rem",
-              fontWeight: 800,
-              color: "#99F6E4",
-              background: "rgba(255,255,255,0.18)",
-              padding: "0.45rem 0.85rem",
-              borderRadius: "8px",
-              border: "1px solid rgba(255,255,255,0.25)",
-              letterSpacing: "0.02em"
-            }}>
-              QA Controlled Inspection View (Read-Only)
-            </span>
-          )}
+          ) : (() => {
+            const recipientName = doc?.received_by || "";
+            const hasAssignedRecipient = recipientName.trim().length > 0 &&
+              !recipientName.toLowerCase().includes("qa direct") &&
+              !recipientName.toLowerCase().includes("self");
+
+            if (hasAssignedRecipient) {
+              return (
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <span style={{ fontSize: "0.76rem", fontWeight: 800, color: "#FEF08A", background: "rgba(245, 158, 11, 0.2)", padding: "0.45rem 0.85rem", borderRadius: "8px", border: "1px solid rgba(245, 158, 11, 0.4)" }}>
+                    <Send size={13} style={{ display: "inline", verticalAlign: "middle", marginRight: "4px" }} />
+                    Sent to: {recipientName} (Print Active on Recipient Side Only)
+                  </span>
+                </div>
+              );
+            }
+
+            return (
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <button
+                  onClick={handlePrint}
+                  disabled={printing}
+                  style={{
+                    padding: "0.6rem 1.4rem",
+                    background: "#10B981",
+                    color: "white",
+                    borderRadius: "8px",
+                    fontWeight: 800,
+                    fontSize: "0.85rem",
+                    boxShadow: "0 4px 14px rgba(16, 185, 129, 0.35)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.4rem"
+                  }}
+                >
+                  <Printer size={17} />
+                  {printing ? "Printing..." : "Print Document (QA Direct)"}
+                </button>
+                <span style={{
+                  fontSize: "0.74rem",
+                  fontWeight: 800,
+                  color: "#99F6E4",
+                  background: "rgba(255,255,255,0.18)",
+                  padding: "0.45rem 0.75rem",
+                  borderRadius: "8px",
+                  border: "1px solid rgba(255,255,255,0.25)",
+                  letterSpacing: "0.02em"
+                }}>
+                  QA Direct Print Mode
+                </span>
+              </div>
+            );
+          })()}
 
           <button onClick={onClose} style={{ background: "rgba(255,255,255,0.2)", padding: "0.45rem", borderRadius: "50%", color: "white", border: "1px solid rgba(255,255,255,0.3)" }}>
             <X size={18} />

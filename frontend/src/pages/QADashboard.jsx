@@ -366,6 +366,33 @@ export function QADashboard() {
           </button>
         </div>
 
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <button
+            onClick={() => {
+              setPresetRequisition(null);
+              setIsUploadOpen(true);
+            }}
+            style={{
+              padding: "0.55rem 1.1rem",
+              background: "linear-gradient(135deg, #F59E0B, #D97706)",
+              color: "white",
+              borderRadius: "10px",
+              fontWeight: 800,
+              fontSize: "0.86rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.45rem",
+              boxShadow: "0 4px 14px rgba(245, 158, 11, 0.35)",
+              border: "none",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <Plus size={18} />
+            QMS Docs
+          </button>
+        </div>
+
         {activeTab === "documents" && (
           <div style={{ display: "flex", gap: "0.6rem", alignItems: "center" }}>
             <div style={{ position: "relative" }}>

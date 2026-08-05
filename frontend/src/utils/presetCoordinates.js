@@ -24,6 +24,8 @@ export const BPR_PRESET_FIELDS = [
 ];
 
 export function getPresetFields(docType = "BMR") {
-  const type = (docType || "BMR").toUpperCase();
-  return type === "BPR" ? [...BPR_PRESET_FIELDS] : [...BMR_PRESET_FIELDS];
+  const type = (docType || "").toUpperCase();
+  if (type === "BPR") return [...BPR_PRESET_FIELDS];
+  if (type === "BMR") return [...BMR_PRESET_FIELDS];
+  return []; // Forms, Incidence, CAPA, Custom categories have NO auto-preset overlays
 }

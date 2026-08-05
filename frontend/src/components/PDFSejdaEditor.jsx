@@ -55,27 +55,30 @@ export function PDFSejdaEditor({
   useEffect(() => {
     const multiPageFields = [];
     const pageCount = numPages || 78;
-    const activeDocType = initialData?.document_type || initialData?.docType || "BMR";
+    const activeDocType = (initialData?.document_type || initialData?.docType || "BMR").toUpperCase();
+    const isBmrOrBpr = activeDocType === "BMR" || activeDocType === "BPR";
     const presets = getPresetFields(activeDocType);
     const batchPreset = presets.find(f => f.fieldName === "batch_number") || { x: 158, y: 134 };
 
-    for (let p = 0; p < pageCount; p++) {
-      if (p === 0) {
-        multiPageFields.push(...presets.map(f => ({ ...f, fontSize: 11 })));
-      } else {
-        multiPageFields.push({
-          id: `auto_batch_p${p}`,
-          pageIndex: p,
-          fieldName: "batch_number",
-          label: "BATCH NO",
-          x: batchPreset.x,
-          y: batchPreset.y,
-          width: batchPreset.width || 130,
-          height: batchPreset.height || 20,
-          fontSize: 11,
-          isBold: false,
-          color: "#000000",
-        });
+    if (isBmrOrBpr) {
+      for (let p = 0; p < pageCount; p++) {
+        if (p === 0) {
+          multiPageFields.push(...presets.map(f => ({ ...f, fontSize: 11 })));
+        } else {
+          multiPageFields.push({
+            id: `auto_batch_p${p}`,
+            pageIndex: p,
+            fieldName: "batch_number",
+            label: "BATCH NO",
+            x: batchPreset.x,
+            y: batchPreset.y,
+            width: batchPreset.width || 130,
+            height: batchPreset.height || 20,
+            fontSize: 11,
+            isBold: false,
+            color: "#000000",
+          });
+        }
       }
     }
 
@@ -445,70 +448,101 @@ export function PDFSejdaEditor({
         </div>
       </div>
 
-      {/* QA METADATA SUBHEADER BAR (WARM BEIGE & MINT PANELS) */}
-      <div style={{ background: "#F0FDFA", borderBottom: "1px solid #CCFBF1", padding: "0.75rem 1.5rem", display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "0.75rem" }}>
-        <div>
-          <label style={{ color: "#0F766E", fontSize: "0.74rem", fontWeight: 800, display: "block", marginBottom: "2px" }}>Batch Number *</label>
-          <input
-            type="text"
-            className="form-input"
-            style={{ padding: "0.45rem 0.65rem", fontSize: "0.85rem", background: "#FFFFFF", color: "#1F2937", borderColor: "#99F6E4", fontWeight: 700 }}
-            value={batchNumber}
-            onChange={(e) => setBatchNumber(e.target.value)}
-          />
-        </div>
-        <div>
-          <label style={{ color: "#0F766E", fontSize: "0.74rem", fontWeight: 800, display: "block", marginBottom: "2px" }}>Mfg Date *</label>
-          <input
-            type="date"
-            className="form-input"
-            style={{ padding: "0.45rem 0.65rem", fontSize: "0.85rem", background: "#FFFFFF", color: "#1F2937", borderColor: "#99F6E4", fontWeight: 700 }}
-            value={mfgDate}
-            onChange={(e) => setMfgDate(e.target.value)}
-          />
-        </div>
-        <div>
-          <label style={{ color: "#0F766E", fontSize: "0.74rem", fontWeight: 800, display: "block", marginBottom: "2px" }}>Exp Date *</label>
-          <input
-            type="date"
-            className="form-input"
-            style={{ padding: "0.45rem 0.65rem", fontSize: "0.85rem", background: "#FFFFFF", color: "#1F2937", borderColor: "#99F6E4", fontWeight: 700 }}
-            value={expiryDate}
-            onChange={(e) => setExpiryDate(e.target.value)}
-          />
-        </div>
-        <div>
-          <label style={{ color: "#0F766E", fontSize: "0.74rem", fontWeight: 800, display: "block", marginBottom: "2px" }}>Issued By</label>
-          <input
-            type="text"
-            className="form-input"
-            style={{ padding: "0.45rem 0.65rem", fontSize: "0.85rem", background: "#FFFFFF", color: "#1F2937", borderColor: "#99F6E4", fontWeight: 700 }}
-            value={issuedBy}
-            onChange={(e) => setIssuedBy(e.target.value)}
-          />
-        </div>
-        <div>
-          <label style={{ color: "#0F766E", fontSize: "0.74rem", fontWeight: 800, display: "block", marginBottom: "2px" }}>Issued Date</label>
-          <input
-            type="date"
-            className="form-input"
-            style={{ padding: "0.45rem 0.65rem", fontSize: "0.85rem", background: "#FFFFFF", color: "#1F2937", borderColor: "#99F6E4", fontWeight: 700 }}
-            value={issuedDate}
-            onChange={(e) => setIssuedDate(e.target.value)}
-          />
-        </div>
-        <div>
-          <label style={{ color: "#0F766E", fontSize: "0.74rem", fontWeight: 800, display: "block", marginBottom: "2px" }}>Received By *</label>
-          <input
-            type="text"
-            className="form-input"
-            style={{ padding: "0.45rem 0.65rem", fontSize: "0.85rem", background: "#FFFFFF", color: "#1F2937", borderColor: "#99F6E4", fontWeight: 700 }}
-            value={receivedByCustom}
-            onChange={(e) => setReceivedByCustom(e.target.value)}
-            placeholder="Type recipient name..."
-          />
-        </div>
-      </div>
+      {/* QA METADATA SUBHEADER BAR */}
+      {(() => {
+        const activeDocType = (initialData?.document_type || "BMR").toUpperCase();
+        const isBmrOrBpr = activeDocType === "BMR" || activeDocType === "BPR";
+
+        if (isBmrOrBpr) {
+          return (
+            <div style={{ background: "#F0FDFA", borderBottom: "1px solid #CCFBF1", padding: "0.75rem 1.5rem", display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "0.75rem" }}>
+              <div>
+                <label style={{ color: "#0F766E", fontSize: "0.74rem", fontWeight: 800, display: "block", marginBottom: "2px" }}>Batch Number *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  style={{ padding: "0.45rem 0.65rem", fontSize: "0.85rem", background: "#FFFFFF", color: "#1F2937", borderColor: "#99F6E4", fontWeight: 700 }}
+                  value={batchNumber}
+                  onChange={(e) => setBatchNumber(e.target.value)}
+                />
+              </div>
+              <div>
+                <label style={{ color: "#0F766E", fontSize: "0.74rem", fontWeight: 800, display: "block", marginBottom: "2px" }}>Mfg Date *</label>
+                <input
+                  type="date"
+                  className="form-input"
+                  style={{ padding: "0.45rem 0.65rem", fontSize: "0.85rem", background: "#FFFFFF", color: "#1F2937", borderColor: "#99F6E4", fontWeight: 700 }}
+                  value={mfgDate}
+                  onChange={(e) => setMfgDate(e.target.value)}
+                />
+              </div>
+              <div>
+                <label style={{ color: "#0F766E", fontSize: "0.74rem", fontWeight: 800, display: "block", marginBottom: "2px" }}>Exp Date *</label>
+                <input
+                  type="date"
+                  className="form-input"
+                  style={{ padding: "0.45rem 0.65rem", fontSize: "0.85rem", background: "#FFFFFF", color: "#1F2937", borderColor: "#99F6E4", fontWeight: 700 }}
+                  value={expiryDate}
+                  onChange={(e) => setExpiryDate(e.target.value)}
+                />
+              </div>
+              <div>
+                <label style={{ color: "#0F766E", fontSize: "0.74rem", fontWeight: 800, display: "block", marginBottom: "2px" }}>Issued By</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  style={{ padding: "0.45rem 0.65rem", fontSize: "0.85rem", background: "#FFFFFF", color: "#1F2937", borderColor: "#99F6E4", fontWeight: 700 }}
+                  value={issuedBy}
+                  onChange={(e) => setIssuedBy(e.target.value)}
+                />
+              </div>
+              <div>
+                <label style={{ color: "#0F766E", fontSize: "0.74rem", fontWeight: 800, display: "block", marginBottom: "2px" }}>Issued Date</label>
+                <input
+                  type="date"
+                  className="form-input"
+                  style={{ padding: "0.45rem 0.65rem", fontSize: "0.85rem", background: "#FFFFFF", color: "#1F2937", borderColor: "#99F6E4", fontWeight: 700 }}
+                  value={issuedDate}
+                  onChange={(e) => setIssuedDate(e.target.value)}
+                />
+              </div>
+              <div>
+                <label style={{ color: "#0F766E", fontSize: "0.74rem", fontWeight: 800, display: "block", marginBottom: "2px" }}>Received By / Email *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  style={{ padding: "0.45rem 0.65rem", fontSize: "0.85rem", background: "#FFFFFF", color: "#1F2937", borderColor: "#99F6E4", fontWeight: 700 }}
+                  value={receivedByCustom}
+                  onChange={(e) => setReceivedByCustom(e.target.value)}
+                  placeholder="Recipient Name / Email..."
+                />
+              </div>
+            </div>
+          );
+        }
+
+        return (
+          <div style={{ background: "#F0FDFA", borderBottom: "1px solid #CCFBF1", padding: "0.75rem 1.5rem", display: "grid", gridTemplateColumns: "1fr 2fr", gap: "1rem", alignItems: "center" }}>
+            <div>
+              <span style={{ color: "#0F766E", fontSize: "0.74rem", fontWeight: 800, display: "block", marginBottom: "2px" }}>Document Category</span>
+              <span style={{ background: "#0D9488", color: "white", padding: "0.35rem 0.85rem", borderRadius: "6px", fontSize: "0.85rem", fontWeight: 800, display: "inline-block" }}>
+                {activeDocType}
+              </span>
+            </div>
+            <div>
+              <label style={{ color: "#0F766E", fontSize: "0.74rem", fontWeight: 800, display: "block", marginBottom: "2px" }}>Send To / Recipient Name or Email *</label>
+              <input
+                type="text"
+                className="form-input"
+                style={{ padding: "0.45rem 0.65rem", fontSize: "0.85rem", background: "#FFFFFF", color: "#1F2937", borderColor: "#99F6E4", fontWeight: 700, width: "100%" }}
+                value={receivedByCustom}
+                onChange={(e) => setReceivedByCustom(e.target.value)}
+                placeholder="e.g. operator@nysabiomed.com or Amit Verma (Plant Officer)"
+              />
+            </div>
+          </div>
+        );
+      })()}
 
       {/* STAGE VIEWPORT (EDITABLE MODE) */}
       <div

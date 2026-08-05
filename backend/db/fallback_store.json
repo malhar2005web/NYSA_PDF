@@ -23,6 +23,63 @@
   ],
   "documents": [
     {
+      "id": 10,
+      "issuance_number": "ISS-2026-0805-205",
+      "document_type": "FORM",
+      "document_name": "FORM Batch FORM-2026",
+      "batch_number": "FORM-2026",
+      "mfg_date": "2026-08-05",
+      "expiry_date": "2026-08-05",
+      "total_pages": 37,
+      "original_file_path": "uploads/originals/clean_ISS-2026-0805-205.pdf",
+      "stamped_file_path": "uploads/form/ISS-2026-0805-205_1785890622184.pdf",
+      "file_size_bytes": 10969355,
+      "print_count": 0,
+      "max_allowed_prints": 1,
+      "status": "PENDING_PRINT",
+      "created_by": 1,
+      "created_at": "2026-08-05T00:43:42.533Z",
+      "custom_fields": []
+    },
+    {
+      "id": 9,
+      "issuance_number": "ISS-2026-0805-453",
+      "document_type": "FORM",
+      "document_name": "FORM Batch FORM-2026",
+      "batch_number": "FORM-2026",
+      "mfg_date": "2026-08-05",
+      "expiry_date": "2026-08-05",
+      "total_pages": 37,
+      "original_file_path": "uploads/originals/clean_ISS-2026-0805-453.pdf",
+      "stamped_file_path": "uploads/form/ISS-2026-0805-453_1785890234164.pdf",
+      "file_size_bytes": 10969397,
+      "print_count": 1,
+      "max_allowed_prints": 1,
+      "status": "PRINTED",
+      "created_by": 1,
+      "created_at": "2026-08-05T00:37:14.470Z",
+      "custom_fields": []
+    },
+    {
+      "id": 8,
+      "issuance_number": "ISS-2026-0805-276",
+      "document_type": "CAPA",
+      "document_name": "CAPA Batch CAPA-2026",
+      "batch_number": "CAPA-2026",
+      "mfg_date": "2026-08-05",
+      "expiry_date": "2026-08-05",
+      "total_pages": 37,
+      "original_file_path": "uploads/originals/clean_ISS-2026-0805-276.pdf",
+      "stamped_file_path": "uploads/capa/ISS-2026-0805-276_1785889359473.pdf",
+      "file_size_bytes": 10970082,
+      "print_count": 1,
+      "max_allowed_prints": 1,
+      "status": "PRINTED",
+      "created_by": 1,
+      "created_at": "2026-08-05T00:22:39.956Z",
+      "custom_fields": []
+    },
+    {
       "id": 7,
       "issuance_number": "ISS-2026-0805-442",
       "document_type": "BPR",
@@ -192,6 +249,30 @@
   ],
   "document_assignments": [
     {
+      "id": 10,
+      "document_id": 10,
+      "assigned_to_user_id": 2,
+      "assigned_by_user_id": 1,
+      "status": "ISSUED",
+      "created_at": "2026-08-05T00:43:42.533Z"
+    },
+    {
+      "id": 9,
+      "document_id": 9,
+      "assigned_to_user_id": 2,
+      "assigned_by_user_id": 1,
+      "status": "ISSUED",
+      "created_at": "2026-08-05T00:37:14.470Z"
+    },
+    {
+      "id": 8,
+      "document_id": 8,
+      "assigned_to_user_id": 2,
+      "assigned_by_user_id": 1,
+      "status": "ISSUED",
+      "created_at": "2026-08-05T00:22:39.956Z"
+    },
+    {
       "id": 7,
       "document_id": 7,
       "assigned_to_user_id": 2,
@@ -318,6 +399,22 @@
       "print_type": "REPRINT",
       "ip_address": "::1",
       "printed_at": "2026-08-04T23:37:57.331Z"
+    },
+    {
+      "id": 10,
+      "document_id": 8,
+      "printed_by": 1,
+      "print_type": "ORIGINAL",
+      "ip_address": "::1",
+      "printed_at": "2026-08-05T00:23:32.200Z"
+    },
+    {
+      "id": 11,
+      "document_id": 9,
+      "printed_by": 1,
+      "print_type": "ORIGINAL",
+      "ip_address": "::1",
+      "printed_at": "2026-08-05T00:38:11.939Z"
     }
   ],
   "reprint_requests": [
@@ -345,6 +442,26 @@
     }
   ],
   "notifications": [
+    {
+      "id": 20,
+      "recipient_role": "QA_ADMIN",
+      "title": "Document Printed: ISS-2026-0805-453",
+      "message": "Document FORM Batch FORM-2026 (ISS-2026-0805-453) was printed by Dr. Rajesh Sharma (QA Lead).",
+      "type": "DOCUMENT_PRINTED",
+      "document_id": 9,
+      "is_read": false,
+      "created_at": "2026-08-05T00:38:11.939Z"
+    },
+    {
+      "id": 19,
+      "recipient_role": "QA_ADMIN",
+      "title": "Document Printed: ISS-2026-0805-276",
+      "message": "Document CAPA Batch CAPA-2026 (ISS-2026-0805-276) was printed by Dr. Rajesh Sharma (QA Lead).",
+      "type": "DOCUMENT_PRINTED",
+      "document_id": 8,
+      "is_read": false,
+      "created_at": "2026-08-05T00:23:32.200Z"
+    },
     {
       "id": 18,
       "recipient_role": "QA_ADMIN",
@@ -517,6 +634,97 @@
     }
   ],
   "audit_logs": [
+    {
+      "id": 40,
+      "document_id": 10,
+      "user_id": 1,
+      "user_name": "System",
+      "user_role": "QA_ADMIN",
+      "action": "Document Uploaded",
+      "document_name": "N/A",
+      "batch_number": "N/A",
+      "issuance_number": "N/A",
+      "details": "Issued FORM ISS-2026-0805-205 for Batch FORM-2026 (Received by Amit Verma (Plant Officer)).",
+      "created_at": "2026-08-05T00:43:42.617Z"
+    },
+    {
+      "id": 39,
+      "document_id": 9,
+      "user_id": 1,
+      "user_name": "Dr. Rajesh Sharma (QA Lead)",
+      "user_role": "QA_ADMIN",
+      "action": "Print Notification Sent",
+      "document_name": "FORM Batch FORM-2026",
+      "batch_number": "FORM-2026",
+      "issuance_number": "ISS-2026-0805-453",
+      "details": "QA/Admin notified of Printed execution.",
+      "created_at": "2026-08-05T00:38:11.942Z"
+    },
+    {
+      "id": 38,
+      "document_id": 9,
+      "user_id": 1,
+      "user_name": "Dr. Rajesh Sharma (QA Lead)",
+      "user_role": "QA_ADMIN",
+      "action": "Printed",
+      "document_name": "FORM Batch FORM-2026",
+      "batch_number": "FORM-2026",
+      "issuance_number": "ISS-2026-0805-453",
+      "details": "Printed (Total Prints: 1/1) by Dr. Rajesh Sharma (QA Lead)",
+      "created_at": "2026-08-05T00:38:11.940Z"
+    },
+    {
+      "id": 37,
+      "document_id": 9,
+      "user_id": 1,
+      "user_name": "System",
+      "user_role": "QA_ADMIN",
+      "action": "Document Uploaded",
+      "document_name": "N/A",
+      "batch_number": "N/A",
+      "issuance_number": "N/A",
+      "details": "Issued FORM ISS-2026-0805-453 for Batch FORM-2026 (Received by Amit Verma (Plant Officer)).",
+      "created_at": "2026-08-05T00:37:14.557Z"
+    },
+    {
+      "id": 36,
+      "document_id": 8,
+      "user_id": 1,
+      "user_name": "Dr. Rajesh Sharma (QA Lead)",
+      "user_role": "QA_ADMIN",
+      "action": "Print Notification Sent",
+      "document_name": "CAPA Batch CAPA-2026",
+      "batch_number": "CAPA-2026",
+      "issuance_number": "ISS-2026-0805-276",
+      "details": "QA/Admin notified of Printed execution.",
+      "created_at": "2026-08-05T00:23:32.204Z"
+    },
+    {
+      "id": 35,
+      "document_id": 8,
+      "user_id": 1,
+      "user_name": "Dr. Rajesh Sharma (QA Lead)",
+      "user_role": "QA_ADMIN",
+      "action": "Printed",
+      "document_name": "CAPA Batch CAPA-2026",
+      "batch_number": "CAPA-2026",
+      "issuance_number": "ISS-2026-0805-276",
+      "details": "Printed (Total Prints: 1/1) by Dr. Rajesh Sharma (QA Lead)",
+      "created_at": "2026-08-05T00:23:32.202Z"
+    },
+    {
+      "id": 34,
+      "document_id": 8,
+      "user_id": 1,
+      "user_name": "System",
+      "user_role": "QA_ADMIN",
+      "action": "Document Uploaded",
+      "document_name": "N/A",
+      "batch_number": "N/A",
+      "issuance_number": "N/A",
+      "details": "Issued CAPA ISS-2026-0805-276 for Batch CAPA-2026 (Received by Amit Verma (Plant Officer)).",
+      "created_at": "2026-08-05T00:22:40.040Z"
+    },
     {
       "id": 33,
       "document_id": 7,

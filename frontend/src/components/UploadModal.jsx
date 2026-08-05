@@ -14,6 +14,9 @@ export function UploadModal({ isOpen, presetData, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [customCategory, setCustomCategory] = useState("");
+  const [docTitle, setDocTitle] = useState("");
+
   // Auto-Incrementing / Editable Issuance Number State
   const [issuanceNumber, setIssuanceNumber] = useState("");
 
@@ -26,10 +29,15 @@ export function UploadModal({ isOpen, presetData, onClose, onSuccess }) {
       generateDefaultIssuanceNumber();
       setIsEditorOpen(false);
       setPreviewData(null);
+      setCustomCategory("");
+      setDocTitle("");
       if (presetData) {
         if (presetData.document_type) setDocType(presetData.document_type.toUpperCase());
         if (presetData.batch_number) setBatchNumber(presetData.batch_number);
         if (presetData.requested_by_name) setCustomReceivedBy(presetData.requested_by_name);
+      } else {
+        setDocType("FORM");
+        setCustomReceivedBy("");
       }
     }
   }, [isOpen, presetData]);
@@ -65,10 +73,17 @@ export function UploadModal({ isOpen, presetData, onClose, onSuccess }) {
       setError("Please select a scanned PDF file.");
       return;
     }
-    if (!batchNumber || !mfgDate || !expiryDate) {
+    const finalType = docType === "CUSTOM" ? (customCategory || "CUSTOM") : docType;
+    const isBmrOrBpr = finalType === "BMR" || finalType === "BPR";
+    if (isBmrOrBpr && (!batchNumber || !mfgDate || !expiryDate)) {
       setError("Please fill in Batch Number, Manufacturing Date, and Expiry Date.");
       return;
     }
+
+    // Default fallbacks for Forms / Incidence / CAPA / Custom if left blank
+    const effectiveBatchNumber = batchNumber || `${finalType}-${new Date().getFullYear()}`;
+    const effectiveMfgDate = mfgDate || new Date().toISOString().split("T")[0];
+    const effectiveExpiryDate = expiryDate || new Date().toISOString().split("T")[0];
 
     setLoading(true);
     setError("");
@@ -76,10 +91,10 @@ export function UploadModal({ isOpen, presetData, onClose, onSuccess }) {
     try {
       const formData = new FormData();
       formData.append("pdf", file);
-      formData.append("document_type", docType);
-      formData.append("batch_number", batchNumber);
-      formData.append("mfg_date", mfgDate);
-      formData.append("expiry_date", expiryDate);
+      formData.append("document_type", finalType);
+      formData.append("batch_number", effectiveBatchNumber);
+      formData.append("mfg_date", effectiveMfgDate);
+      formData.append("expiry_date", effectiveExpiryDate);
       formData.append("issued_by", issuedBy);
       formData.append("issued_date", issuedDate);
       formData.append("custom_issuance_number", issuanceNumber);
@@ -91,7 +106,10 @@ export function UploadModal({ isOpen, presetData, onClose, onSuccess }) {
 
       const data = await res.json();
       if (data.success && data.previewData) {
-        setPreviewData(data.previewData);
+        setPreviewData({
+          ...data.previewData,
+          document_name: docTitle || `${finalType} ${effectiveBatchNumber}`,
+        });
         setIsEditorOpen(true);
       } else {
         setError(data.message || "Failed to load interactive editor");
@@ -109,12 +127,15 @@ export function UploadModal({ isOpen, presetData, onClose, onSuccess }) {
   async function handleConfirmIssuanceFromEditor(editorPayload) {
     setLoading(true);
     try {
+      const finalType = docType === "CUSTOM" ? (customCategory || "CUSTOM") : docType;
       const res = await fetch("/api/v1/documents/confirm-issuance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...previewData,
           ...editorPayload,
+          document_type: finalType,
+          document_name: docTitle || editorPayload.document_name || `${finalType} Batch ${batchNumber || "N/A"}`,
           requisition_id: presetData?.id || null,
         }),
       });
@@ -127,18 +148,23 @@ export function UploadModal({ isOpen, presetData, onClose, onSuccess }) {
         setBatchNumber("");
         setMfgDate("");
         setExpiryDate("");
+        setDocTitle("");
+        setCustomCategory("");
         setIsEditorOpen(false);
       } else {
         setError(data.message || "Failed to issue document");
       }
     } catch (e) {
-      setError("Error issuing document to Production");
+      setError("Error issuing document");
     } finally {
       setLoading(false);
     }
   }
 
   if (!isOpen) return null;
+
+  const finalType = docType === "CUSTOM" ? (customCategory || "CUSTOM") : docType;
+  const isBmrOrBpr = finalType === "BMR" || finalType === "BPR";
 
   return (
     <>
@@ -150,10 +176,10 @@ export function UploadModal({ isOpen, presetData, onClose, onSuccess }) {
           pdfUrl={`/${previewData.temp_original_path}`}
           issuanceNumber={issuanceNumber}
           initialData={{
-            document_type: docType,
-            batch_number: batchNumber,
-            mfg_date: mfgDate,
-            expiry_date: expiryDate,
+            document_type: finalType,
+            batch_number: batchNumber || `${finalType}-${new Date().getFullYear()}`,
+            mfg_date: mfgDate || new Date().toISOString().split("T")[0],
+            expiry_date: expiryDate || new Date().toISOString().split("T")[0],
             issued_by: issuedBy,
             issued_date: issuedDate,
             received_by: customReceivedBy,
@@ -163,19 +189,17 @@ export function UploadModal({ isOpen, presetData, onClose, onSuccess }) {
         />
       )}
 
-      {/* ---------------------------------------------------- */}
-      {/* INITIAL METADATA ENTRY MODAL                         */}
-      {/* ---------------------------------------------------- */}
+      {/* Upload & Setup Modal */}
       {!isEditorOpen && (
-        <div className="modal-overlay">
-          <div className="modal-card">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", borderBottom: "1px solid #EAE7E1", paddingBottom: "0.75rem" }}>
+        <div style={{ position: "fixed", inset: 0, zIndex: 150, background: "rgba(15, 23, 42, 0.65)", backdropFilter: "blur(4px)", display: "flex", justifyContent: "center", alignItems: "center", padding: "1rem" }}>
+          <div style={{ background: "#FFFFFF", borderRadius: "16px", width: "100%", maxWidth: "620px", maxHeight: "90vh", overflowY: "auto", padding: "1.75rem", boxShadow: "0 20px 40px rgba(0, 0, 0, 0.2)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", borderBottom: "1px solid #EAE7E1", paddingBottom: "0.85rem" }}>
               <div>
-                <h3 style={{ fontSize: "1.2rem", fontWeight: 800, color: "#1F2937" }}>
-                  Upload Scanned {docType} Document
+                <h3 style={{ fontSize: "1.2rem", fontWeight: 800, color: "#1F2937", margin: 0 }}>
+                  Issue Controlled PDF Document / Form
                 </h3>
-                <p style={{ fontSize: "0.82rem", color: "#6B7280" }}>
-                  Select PDF scan and enter batch metadata to launch Sejda-style interactive field editor.
+                <p style={{ fontSize: "0.8rem", color: "#6B7280", margin: "2px 0 0 0" }}>
+                  Upload scanned PDF, set recipient details, and add custom fields in interactive editor
                 </p>
               </div>
               <button onClick={onClose} style={{ background: "#F3F4F6", padding: "0.4rem", borderRadius: "50%", color: "#6B7280" }}>
@@ -191,93 +215,55 @@ export function UploadModal({ isOpen, presetData, onClose, onSuccess }) {
             )}
 
             <form onSubmit={handleOpenEditor}>
-              {/* Document Type Selector & Combo Button */}
-              {/* INTERACTIVE BMR / BPR CARD TOGGLE SELECTOR */}
+              {/* INTERACTIVE DOCUMENT TYPE CARD SELECTOR */}
               <div style={{ marginBottom: "1.25rem" }}>
-                <label className="form-label">Document Type Selection *</label>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem" }}>
-                  {/* LEFT CARD: BMR */}
-                  <div
-                    onClick={() => setDocType("BMR")}
-                    style={{
-                      background: docType === "BMR" ? "#F0FDFA" : "#FFFFFF",
-                      border: docType === "BMR" ? "2px solid #0D9488" : "1.5px solid #E2E8F0",
-                      borderRadius: "12px",
-                      padding: "0.75rem 0.9rem",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      boxShadow: docType === "BMR" ? "0 4px 14px rgba(13, 148, 136, 0.15)" : "0 1px 3px rgba(0,0,0,0.02)",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <div style={{
-                        width: "32px", height: "32px", borderRadius: "8px",
-                        background: docType === "BMR" ? "#0D9488" : "#F3F4F6",
-                        color: docType === "BMR" ? "white" : "#6B7280",
-                        display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800
-                      }}>
-                        <FileCheck size={18} />
-                      </div>
-                      <div>
-                        <h4 style={{ fontSize: "0.9rem", fontWeight: 800, color: docType === "BMR" ? "#0F766E" : "#1F2937", margin: 0 }}>
-                          BMR
-                        </h4>
-                        <p style={{ fontSize: "0.7rem", color: "#6B7280", margin: 0, fontWeight: 500 }}>
-                          Batch Manufacturing
-                        </p>
-                      </div>
+                <label className="form-label">Select Document Category *</label>
+                <div style={{ display: "grid", gridTemplateColumns: presetData ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: "0.5rem" }}>
+                  {(presetData ? [
+                    { id: "BMR", title: "BMR", desc: "Mfg Record", color: "#0D9488" },
+                    { id: "BPR", title: "BPR", desc: "Packing Record", color: "#06B6D4" },
+                  ] : [
+                    { id: "FORM", title: "FORM", desc: "SOP / Blank Form", color: "#8B5CF6" },
+                    { id: "INCIDENCE", title: "INCIDENCE", desc: "Deviation Report", color: "#F59E0B" },
+                    { id: "CAPA", title: "CAPA", desc: "Action Plan", color: "#EF4444" },
+                    { id: "CUSTOM", title: "+ Custom", desc: "User Category", color: "#6366F1" },
+                  ]).map(t => (
+                    <div
+                      key={t.id}
+                      onClick={() => setDocType(t.id)}
+                      style={{
+                        background: docType === t.id ? `${t.color}15` : "#FFFFFF",
+                        border: docType === t.id ? `2px solid ${t.color}` : "1.5px solid #E2E8F0",
+                        borderRadius: "10px",
+                        padding: "0.6rem 0.3rem",
+                        cursor: "pointer",
+                        textAlign: "center",
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      <h4 style={{ fontSize: "0.76rem", fontWeight: 800, color: docType === t.id ? t.color : "#1F2937", margin: 0 }}>
+                        {t.title}
+                      </h4>
+                      <p style={{ fontSize: "0.62rem", color: "#6B7280", margin: "2px 0 0 0", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {t.desc}
+                      </p>
                     </div>
-                    {docType === "BMR" && (
-                      <div style={{ width: "18px", height: "18px", borderRadius: "50%", background: "#0D9488", color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <CheckCircle2 size={13} />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* RIGHT CARD: BPR */}
-                  <div
-                    onClick={() => setDocType("BPR")}
-                    style={{
-                      background: docType === "BPR" ? "#ECFEFF" : "#FFFFFF",
-                      border: docType === "BPR" ? "2px solid #06B6D4" : "1.5px solid #E2E8F0",
-                      borderRadius: "12px",
-                      padding: "0.75rem 0.9rem",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      boxShadow: docType === "BPR" ? "0 4px 14px rgba(6, 182, 212, 0.15)" : "0 1px 3px rgba(0,0,0,0.02)",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <div style={{
-                        width: "32px", height: "32px", borderRadius: "8px",
-                        background: docType === "BPR" ? "#06B6D4" : "#F3F4F6",
-                        color: docType === "BPR" ? "white" : "#6B7280",
-                        display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800
-                      }}>
-                        <FileCheck size={18} />
-                      </div>
-                      <div>
-                        <h4 style={{ fontSize: "0.9rem", fontWeight: 800, color: docType === "BPR" ? "#0891B2" : "#1F2937", margin: 0 }}>
-                          BPR
-                        </h4>
-                        <p style={{ fontSize: "0.7rem", color: "#6B7280", margin: 0, fontWeight: 500 }}>
-                          Batch Packing Record
-                        </p>
-                      </div>
-                    </div>
-                    {docType === "BPR" && (
-                      <div style={{ width: "18px", height: "18px", borderRadius: "50%", background: "#06B6D4", color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <CheckCircle2 size={13} />
-                      </div>
-                    )}
-                  </div>
+                  ))}
                 </div>
+
+                {docType === "CUSTOM" && (
+                  <div style={{ marginTop: "0.75rem" }}>
+                    <label className="form-label" style={{ fontSize: "0.78rem" }}>Type Custom Category Name *</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. Logbook, SOP Form, Change Control, Maintenance Sheet..."
+                      value={customCategory}
+                      onChange={(e) => setCustomCategory(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Drag & Drop Dropzone */}
@@ -314,7 +300,7 @@ export function UploadModal({ isOpen, presetData, onClose, onSuccess }) {
                         Click or Drag & Drop scanned PDF here
                       </p>
                       <p style={{ fontSize: "0.78rem", color: "#6B7280", marginTop: "2px" }}>
-                        Supports BMR/BPR PDF scans up to 50MB
+                        Supports PDF scans up to 50MB
                       </p>
                     </>
                   )}
@@ -324,7 +310,7 @@ export function UploadModal({ isOpen, presetData, onClose, onSuccess }) {
               {/* Top Margin Stamp (Editable) */}
               <div style={{ background: "#FBF9F5", border: "1px solid #EAE7E1", padding: "0.85rem", borderRadius: "8px", marginBottom: "1.25rem" }}>
                 <label className="form-label" style={{ fontSize: "0.78rem", color: "#4B5563" }}>
-                  Top-Right Header Margin Issuance Number (Editable)
+                  Top-Right Header Margin Issuance Number (Editable Stamp)
                 </label>
                 <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.25rem" }}>
                   <input
@@ -346,75 +332,103 @@ export function UploadModal({ isOpen, presetData, onClose, onSuccess }) {
                 </div>
               </div>
 
-              {/* Metadata Form Fields */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                <div className="form-group">
-                  <label className="form-label">Batch Number *</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="e.g. B-2005"
-                    value={batchNumber}
-                    onChange={(e) => setBatchNumber(e.target.value)}
-                    required
-                  />
-                </div>
+              {/* Metadata Form Fields — CONDITIONAL FOR BMR/BPR VS FORMS/INCIDENCE/CAPA/CUSTOM */}
+              {isBmrOrBpr ? (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                  <div className="form-group">
+                    <label className="form-label">Batch Number *</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. B-2005"
+                      value={batchNumber}
+                      onChange={(e) => setBatchNumber(e.target.value)}
+                      required
+                    />
+                  </div>
 
-                <div className="form-group">
-                  <label className="form-label">Manufacturing Date *</label>
-                  <input
-                    type="date"
-                    className="form-input"
-                    value={mfgDate}
-                    onChange={(e) => setMfgDate(e.target.value)}
-                    required
-                  />
-                </div>
+                  <div className="form-group">
+                    <label className="form-label">Manufacturing Date *</label>
+                    <input
+                      type="date"
+                      className="form-input"
+                      value={mfgDate}
+                      onChange={(e) => setMfgDate(e.target.value)}
+                      required
+                    />
+                  </div>
 
-                <div className="form-group">
-                  <label className="form-label">Expiry Date *</label>
-                  <input
-                    type="date"
-                    className="form-input"
-                    value={expiryDate}
-                    onChange={(e) => setExpiryDate(e.target.value)}
-                    required
-                  />
-                </div>
+                  <div className="form-group">
+                    <label className="form-label">Expiry Date *</label>
+                    <input
+                      type="date"
+                      className="form-input"
+                      value={expiryDate}
+                      onChange={(e) => setExpiryDate(e.target.value)}
+                      required
+                    />
+                  </div>
 
-                <div className="form-group">
-                  <label className="form-label">Document Issued By</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={issuedBy}
-                    onChange={(e) => setIssuedBy(e.target.value)}
-                  />
-                </div>
+                  <div className="form-group">
+                    <label className="form-label">Document Issued By</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={issuedBy}
+                      onChange={(e) => setIssuedBy(e.target.value)}
+                    />
+                  </div>
 
-                <div className="form-group">
-                  <label className="form-label">Issued Date</label>
-                  <input
-                    type="date"
-                    className="form-input"
-                    value={issuedDate}
-                    onChange={(e) => setIssuedDate(e.target.value)}
-                  />
-                </div>
+                  <div className="form-group">
+                    <label className="form-label">Issued Date</label>
+                    <input
+                      type="date"
+                      className="form-input"
+                      value={issuedDate}
+                      onChange={(e) => setIssuedDate(e.target.value)}
+                    />
+                  </div>
 
-                {/* RECEIVED BY (SINGLE TYPING INPUT ONLY) */}
-                <div className="form-group">
-                  <label className="form-label">Received By *</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="Type recipient name..."
-                    value={customReceivedBy}
-                    onChange={(e) => setCustomReceivedBy(e.target.value)}
-                    required
-                  />
+                  <div className="form-group">
+                    <label className="form-label">Received By / Recipient Email *</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Name or Email (e.g. operator@nysabiomed.com)"
+                      value={customReceivedBy}
+                      onChange={(e) => setCustomReceivedBy(e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1rem" }}>
+                  <div className="form-group">
+                    <label className="form-label">Document Title / Form Name (Optional)</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder={`e.g. ${finalType} Report - Equipment Maintenance Sheet`}
+                      value={docTitle}
+                      onChange={(e) => setDocTitle(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Send To / Recipient Name or Email (Optional)</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Leave blank for QA Direct Print, or enter recipient (e.g. Amit Verma / operator@nysabiomed.com)"
+                      value={customReceivedBy}
+                      onChange={(e) => setCustomReceivedBy(e.target.value)}
+                    />
+                    <span style={{ fontSize: "0.72rem", color: "#6B7280", marginTop: "4px", display: "block" }}>
+                      💡 If specified, document will be sent to recipient for printing. If left blank, QA Admin can print directly.
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Form Action Buttons */}
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "1.25rem", borderTop: "1px solid #EAE7E1", paddingTop: "1rem" }}>
