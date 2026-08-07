@@ -187,23 +187,22 @@ export function DocumentViewerModal({ document: doc, isOpen, onClose, onRefresh,
         ctx.fillText(stampText, stampX + 12 * printScale, stampY + 4 * printScale);
         ctx.restore();
 
-        // Composite COMPLETED green rubber stamp on Page 1
+        // Composite COMPLETED green rubber stamp on Page 1 (next to MASTER COPY box at bottom)
         if (i === 1) {
           try {
             const stampImg = new Image();
-            stampImg.src = "/completed_stamp.jpg";
+            stampImg.src = "/completed_stamp.png";
             await new Promise((resolve) => {
               stampImg.onload = resolve;
               stampImg.onerror = resolve;
             });
             if (stampImg.complete && stampImg.naturalWidth > 0) {
               ctx.save();
-              ctx.globalCompositeOperation = "multiply";
-              ctx.globalAlpha = 0.92;
-              const imgW = 105 * printScale;
+              ctx.globalAlpha = 0.95;
+              const imgW = 115 * printScale;
               const imgH = (stampImg.naturalHeight / stampImg.naturalWidth) * imgW;
-              const imgX = viewport.width - imgW - 185 * printScale;
-              const imgY = 10 * printScale;
+              const imgX = 200 * printScale;
+              const imgY = viewport.height - imgH - 40 * printScale;
               ctx.drawImage(stampImg, imgX, imgY, imgW, imgH);
               ctx.restore();
             }

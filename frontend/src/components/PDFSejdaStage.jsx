@@ -143,22 +143,21 @@ export function PDFSejdaStage({
         {issuanceNumber}
       </div>
 
-      {/* LAYER 2B: PAGE 1 COMPLETED GREEN RUBBER STAMP */}
+      {/* LAYER 2B: PAGE 1 COMPLETED GREEN RUBBER STAMP (NEXT TO MASTER COPY) */}
       {currentPage === 1 && (
         <img
-          src="/completed_stamp.jpg"
+          src="/completed_stamp.png"
           alt="Completed Stamp"
           style={{
             position: "absolute",
-            top: `${10 * scale}px`,
-            right: `${185 * scale}px`,
-            width: `${105 * scale}px`,
+            bottom: `${40 * scale}px`,
+            left: `${200 * scale}px`,
+            width: `${115 * scale}px`,
             height: "auto",
             objectFit: "contain",
             pointerEvents: "none",
             zIndex: 14,
-            opacity: 0.92,
-            mixBlendMode: "multiply",
+            opacity: 0.95,
           }}
         />
       )}

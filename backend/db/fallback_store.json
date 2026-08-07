@@ -23,6 +23,25 @@
   ],
   "documents": [
     {
+      "id": 13,
+      "issuance_number": "ISS-2026-0807-174",
+      "document_type": "BPR",
+      "document_name": "BPR Batch b-20005",
+      "batch_number": "b-20005",
+      "mfg_date": "2026-08-07",
+      "expiry_date": "2028-08-07",
+      "total_pages": 37,
+      "original_file_path": "uploads/originals/clean_ISS-2026-0807-174.pdf",
+      "stamped_file_path": "uploads/bpr/ISS-2026-0807-174_1786079363063.pdf",
+      "file_size_bytes": 10970175,
+      "print_count": 0,
+      "max_allowed_prints": 1,
+      "status": "PENDING_PRINT",
+      "created_by": 1,
+      "created_at": "2026-08-07T05:09:23.550Z",
+      "custom_fields": []
+    },
+    {
       "id": 12,
       "issuance_number": "ISS-2026-0805-868",
       "document_type": "BPR",
@@ -304,6 +323,14 @@
   ],
   "document_assignments": [
     {
+      "id": 13,
+      "document_id": 13,
+      "assigned_to_user_id": 2,
+      "assigned_by_user_id": 1,
+      "status": "ISSUED",
+      "created_at": "2026-08-07T05:09:23.550Z"
+    },
+    {
       "id": 12,
       "document_id": 12,
       "assigned_to_user_id": 2,
@@ -540,6 +567,14 @@
     }
   ],
   "notifications": [
+    {
+      "id": 1786079197996,
+      "user_id": 1,
+      "title": "New BPR Requisition Request",
+      "message": "Batch #Pending QA Allocation (ondencetron) requested by Amit Verma (Plant Officer)",
+      "is_read": false,
+      "created_at": "2026-08-07T05:06:37.994Z"
+    },
     {
       "id": 25,
       "recipient_id": 2,
@@ -780,6 +815,30 @@
     }
   ],
   "audit_logs": [
+    {
+      "id": 51,
+      "document_id": 13,
+      "user_id": 1,
+      "user_name": "System",
+      "user_role": "QA_ADMIN",
+      "action": "Document Uploaded",
+      "document_name": "N/A",
+      "batch_number": "N/A",
+      "issuance_number": "N/A",
+      "details": "Issued BPR ISS-2026-0807-174 for Batch b-20005 (Received by Amit Verma ).",
+      "created_at": "2026-08-07T05:09:23.632Z"
+    },
+    {
+      "id": 1786079197995,
+      "action": "REQUISITION_SUBMITTED",
+      "batch_number": "Pending QA Allocation",
+      "document_name": "BPR for ondencetron",
+      "details": "Production operator Amit Verma (Plant Officer) submitted BPR requisition for Batch #Pending QA Allocation",
+      "user_id": 2,
+      "user_name": "Amit Verma (Plant Officer)",
+      "user_role": "PRODUCTION",
+      "created_at": "2026-08-07T05:06:37.994Z"
+    },
     {
       "id": 49,
       "document_id": 12,
@@ -1407,6 +1466,19 @@
     }
   ],
   "requisitions": [
+    {
+      "id": 1786079197994,
+      "document_type": "BPR",
+      "product_name": "ondencetron",
+      "batch_number": "Pending QA Allocation",
+      "batch_size": "Standard",
+      "remarks": "",
+      "status": "ISSUED",
+      "requested_by": 2,
+      "requested_by_name": "Amit Verma (Plant Officer)",
+      "created_at": "2026-08-07T05:06:37.994Z",
+      "fulfilled_at": "2026-08-07T05:09:23.629Z"
+    },
     {
       "id": 1785953133771,
       "document_type": "BPR",
