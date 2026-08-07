@@ -156,9 +156,10 @@ export function generateRegisterPDF(documents = [], filterMeta = {}) {
       doc.setFontSize(13);
       doc.text(registerTitle, 10, 18);
 
-      // Top Right: Page / Register Number & Logo Badge
+      // Top Right: Page Number & Logo Badge
       doc.setFontSize(9);
-      doc.text(registerNo, pageWidth - 35, 10);
+      const pageNumStr = String(data.pageNumber).padStart(3, '0');
+      doc.text(pageNumStr, pageWidth - 35, 10);
 
       // Simple Nysa logo box graphic
       doc.setLineWidth(0.4);

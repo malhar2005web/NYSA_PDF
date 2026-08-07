@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { Download, X, FileSpreadsheet, FileText, Calendar, Hash, Building2, CheckCircle2 } from "lucide-react";
+import { Download, X, FileSpreadsheet, FileText, Calendar, Building2, CheckCircle2 } from "lucide-react";
 import { generateRegisterPDF, generateRegisterCSV } from "../utils/generateRegisterPDF";
 
 export function ExportRegisterModal({ isOpen, documents = [], onClose }) {
-  const [registerNo, setRegisterNo] = useState("001");
   const [formCode, setFormCode] = useState("(QAP-009/F2-02)");
   const [companyName, setCompanyName] = useState("Nysa Biomed Pvt.Ltd. Satara.");
   const [registerTitle, setRegisterTitle] = useState("BMR/BPR ISSUANCE AND RETRIEVAL RECORD");
@@ -32,7 +31,6 @@ export function ExportRegisterModal({ isOpen, documents = [], onClose }) {
 
   function handleExportPDF() {
     generateRegisterPDF(filteredDocs, {
-      registerNo,
       formCode,
       companyName,
       registerTitle,
@@ -54,7 +52,7 @@ export function ExportRegisterModal({ isOpen, documents = [], onClose }) {
       display: "flex", justifyContent: "center", alignItems: "center", padding: "1rem"
     }}>
       <div style={{
-        background: "#FFFFFF", borderRadius: "16px", width: "100%", maxWidth: "560px",
+        background: "#FFFFFF", borderRadius: "16px", width: "100%", maxWidth: "540px",
         padding: "1.75rem", boxShadow: "0 20px 40px rgba(0, 0, 0, 0.2)"
       }}>
         {/* MODAL HEADER */}
@@ -65,7 +63,7 @@ export function ExportRegisterModal({ isOpen, documents = [], onClose }) {
               Configure Official PDF Register Export
             </h3>
             <p style={{ fontSize: "0.78rem", color: "#6B7280", margin: "2px 0 0 0" }}>
-              Customize Control Page No., Protocol Ref Code & Filters before generating official PDF.
+              Customize Protocol Ref Code & Filters before generating official PDF.
             </p>
           </div>
           <button onClick={onClose} style={{ background: "#F3F4F6", padding: "0.4rem", borderRadius: "50%", color: "#6B7280", border: "none", cursor: "pointer" }}>
@@ -75,25 +73,8 @@ export function ExportRegisterModal({ isOpen, documents = [], onClose }) {
 
         {/* METADATA SETUP FORM */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
-          {/* Register / Control Page Number */}
-          <div className="form-group">
-            <label className="form-label" style={{ fontSize: "0.78rem" }}>Control / Register No. *</label>
-            <div style={{ position: "relative" }}>
-              <Hash size={16} style={{ position: "absolute", left: "10px", top: "10px", color: "#0D9488" }} />
-              <input
-                type="text"
-                className="form-input"
-                style={{ paddingLeft: "34px", fontWeight: 700, fontFamily: "monospace" }}
-                value={registerNo}
-                onChange={(e) => setRegisterNo(e.target.value)}
-                placeholder="e.g. 001 or REG-2026-001"
-                required
-              />
-            </div>
-          </div>
-
           {/* Form / Protocol Reference Code */}
-          <div className="form-group">
+          <div className="form-group" style={{ gridColumn: "span 2" }}>
             <label className="form-label" style={{ fontSize: "0.78rem" }}>Form / Protocol Ref Code *</label>
             <div style={{ position: "relative" }}>
               <FileText size={16} style={{ position: "absolute", left: "10px", top: "10px", color: "#0D9488" }} />
