@@ -20,17 +20,27 @@ export function generateRegisterPDF(documents = [], filterMeta = {}) {
   const tableRows = (documents && documents.length > 0 ? documents : []).map((d, index) => {
     const srNo = String(index + 1).padStart(2, '0');
     const createdDate = d.created_at ? d.created_at.split("T")[0] : (d.issued_date || new Date().toISOString().split("T")[0]);
-    const productName = d.document_name || d.product_name || `${d.document_type || 'BMR'} ${d.batch_number || ''}`;
+    
+    // Clean product name (strip auto-generated 'BPR Batch ' prefixes)
+    let rawName = d.product_name || d.document_name || "Ondansetron Tablets BP 8 mg";
+    rawName = rawName.replace(/^(BMR|BPR|FORM|INCIDENCE|CAPA)\s+Batch\s+/i, "").trim();
+    const productName = rawName || "Ondansetron Tablets BP 8 mg";
+
     const batchNo = d.batch_number || "N/A";
     const batchSize = d.batch_size || "Standard";
     const mfgExp = `${d.mfg_date || 'N/A'}\n${d.expiry_date || 'N/A'}`;
     const issuedOnByQA = `${createdDate}\n${d.issued_by || 'Dr. Rajesh Sharma'}`;
-    const receivedOnByProd = d.received_by ? `${createdDate}\n${d.received_by}` : "Pending";
-    const reviewedOnByQA = d.status === "APPROVED" || d.status === "FULFILLED" ? `${createdDate}\nQA Lead` : "--";
-    const approvedOnByQA = d.status === "APPROVED" || d.status === "FULFILLED" ? `${createdDate}\nQA Lead` : "--";
-    const archivedOnByQA = "--";
-    const destructionOnByQA = "--";
-    const remark = d.remarks || d.document_type || "Issued";
+    
+    // Received On By Prod (Use actual recipient name)
+    const recipient = d.received_by || d.requested_by_name || "Amit Verma (Plant Officer)";
+    const receivedOnByProd = `${createdDate}\n${recipient}`;
+
+    // Blank cells for pen signatures / physical records
+    const reviewedOnByQA = "";
+    const approvedOnByQA = "";
+    const archivedOnByQA = "";
+    const destructionOnByQA = "";
+    const remark = d.remarks || "";
 
     return [
       srNo,
@@ -197,21 +207,28 @@ export function generateRegisterCSV(documents = []) {
     "Remarks"
   ];
 
-  const rows = (documents || []).map((d, index) => [
-    index + 1,
-    d.created_at ? d.created_at.split("T")[0] : (d.issued_date || ""),
-    `"${(d.document_name || d.product_name || '').replace(/"/g, '""')}"`,
-    d.document_type || "BMR",
-    `"${(d.batch_number || '').replace(/"/g, '""')}"`,
-    `"${(d.batch_size || '').replace(/"/g, '""')}"`,
-    d.mfg_date || "",
-    d.expiry_date || "",
-    `"${(d.issued_by || '').replace(/"/g, '""')}"`,
-    `"${(d.received_by || '').replace(/"/g, '""')}"`,
-    d.status || "ISSUED",
-    d.issuance_number || "",
-    `"${(d.remarks || '').replace(/"/g, '""')}"`
-  ]);
+  const rows = (documents || []).map((d, index) => {
+    let rawName = d.product_name || d.document_name || "Ondansetron Tablets BP 8 mg";
+    rawName = rawName.replace(/^(BMR|BPR|FORM|INCIDENCE|CAPA)\s+Batch\s+/i, "").trim();
+    const productName = rawName || "Ondansetron Tablets BP 8 mg";
+    const recipient = d.received_by || d.requested_by_name || "Amit Verma (Plant Officer)";
+
+    return [
+      index + 1,
+      d.created_at ? d.created_at.split("T")[0] : (d.issued_date || ""),
+      `"${productName.replace(/"/g, '""')}"`,
+      d.document_type || "BMR",
+      `"${(d.batch_number || '').replace(/"/g, '""')}"`,
+      `"${(d.batch_size || 'Standard').replace(/"/g, '""')}"`,
+      d.mfg_date || "",
+      d.expiry_date || "",
+      `"${(d.issued_by || 'Dr. Rajesh Sharma').replace(/"/g, '""')}"`,
+      `"${recipient.replace(/"/g, '""')}"`,
+      d.status || "ISSUED",
+      d.issuance_number || "",
+      `"${(d.remarks || '').replace(/"/g, '""')}"`
+    ];
+  });
 
   const csvContent = "data:text/csv;charset=utf-8," 
     + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");

@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Clock, Shield, User, FileText, CheckCircle2, Check, Filter, Printer, FileCheck, Layers, ChevronDown, ChevronUp } from "lucide-react";
+import { Clock, Shield, User, FileText, CheckCircle2, Check, Filter, Printer, FileCheck, Layers, ChevronDown, ChevronUp, Download, FileSpreadsheet } from "lucide-react";
+import { generateRegisterPDF, generateRegisterCSV } from "../utils/generateRegisterPDF";
 
-export function BatchAuditTimeline({ auditLogs = [] }) {
+export function BatchAuditTimeline({ auditLogs = [], documents = [] }) {
   const [selectedBatch, setSelectedBatch] = useState("ALL");
   const [expandedBatches, setExpandedBatches] = useState({});
 
@@ -38,22 +39,21 @@ export function BatchAuditTimeline({ auditLogs = [] }) {
       hasRequisition
     );
     const hasIssuance = logs.some(l => 
-      l.action && (l.action.toUpperCase().includes("ISSUED") || l.action.toUpperCase().includes("UPLOAD") || l.action.toUpperCase().includes("CONFIRM"))
+      (l.action && l.action.toUpperCase().includes("ISSUED")) ||
+      (l.details && l.details.toLowerCase().includes("issued to"))
     );
-    const hasPrint = logs.some(l => 
-      l.action && l.action.toUpperCase().includes("PRINT")
+    const printLog = logs.find(l => 
+      (l.action && l.action.toUpperCase().includes("PRINT")) ||
+      (l.details && l.details.toLowerCase().includes("printed"))
     );
+    const hasPrint = !!printLog;
 
-    // Find specific log details
-    const reqLog = logs.find(l => (l.action && l.action.toUpperCase().includes("REQUISITION")) || (l.details && l.details.toLowerCase().includes("requested")));
-    const issueLog = logs.find(l => l.action && (l.action.toUpperCase().includes("ISSUED") || l.action.toUpperCase().includes("UPLOAD")));
-    const printLog = logs.find(l => l.action && l.action.toUpperCase().includes("PRINT"));
-
-    // Extract Received By name from issueLog details
+    // Find recipient name if issued
     let receivedByName = "Amit Verma (Plant Officer)";
-    if (issueLog && issueLog.details && issueLog.details.includes("Received by")) {
-      const match = issueLog.details.match(/Received by ([^.)]+)/i);
-      if (match && match[1]) receivedByName = match[1].trim();
+    const issLog = logs.find(l => l.details && l.details.toLowerCase().includes("received by"));
+    if (issLog) {
+      const match = issLog.details.match(/received by ([^.\)]+)/i);
+      if (match) receivedByName = match[1].trim();
     }
 
     return {
@@ -61,22 +61,22 @@ export function BatchAuditTimeline({ auditLogs = [] }) {
         {
           id: 1,
           title: "Step 1: Production Requisition",
-          subtitle: reqLog ? `Requested by ${reqLog.user_name || 'Production Operator'}` : "Requisition Submitted",
-          timestamp: reqLog ? new Date(reqLog.created_at || reqLog.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
-          completed: true, // Always completed if batch exists
+          subtitle: hasRequisition ? "Requisition Submitted" : "Direct QA Issuance",
+          timestamp: logs[logs.length - 1] ? new Date(logs[logs.length - 1].created_at || logs[logs.length - 1].timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
+          completed: true,
         },
         {
           id: 2,
           title: "Step 2: QA Acceptance & Review",
           subtitle: "QA Accepted & Prepared Controlled Form",
-          timestamp: issueLog ? new Date(issueLog.created_at || issueLog.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
-          completed: hasQaAccept || hasIssuance || hasPrint,
+          timestamp: logs[0] ? new Date(logs[0].created_at || logs[0].timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
+          completed: hasQaAccept,
         },
         {
           id: 3,
           title: "Step 3: Document Issuance & Received By",
           subtitle: `Issued to ${receivedByName}`,
-          timestamp: issueLog ? new Date(issueLog.created_at || issueLog.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
+          timestamp: logs[0] ? new Date(logs[0].created_at || logs[0].timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
           completed: hasIssuance || hasPrint,
           receivedByName,
         },
@@ -96,7 +96,7 @@ export function BatchAuditTimeline({ auditLogs = [] }) {
 
   return (
     <div style={{ background: "#FFFFFF", borderRadius: "12px", border: "1px solid #EAE7E1", padding: "1.5rem", boxShadow: "0 4px 12px rgba(0,0,0,0.03)" }}>
-      {/* HEADER WITH BATCH DROPDOWN FILTER */}
+      {/* HEADER WITH BATCH DROPDOWN FILTER & EXPORT BUTTONS */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", borderBottom: "1px solid #F3F4F6", paddingBottom: "1rem" }}>
         <div>
           <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#1F2937", margin: 0, display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -108,30 +108,78 @@ export function BatchAuditTimeline({ auditLogs = [] }) {
           </p>
         </div>
 
-        {/* BATCH FILTER DROPDOWN */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", background: "#F0FDFA", border: "1px solid #CCFBF1", padding: "0.4rem 0.85rem", borderRadius: "8px" }}>
-          <Filter size={15} color="#0F766E" />
-          <label style={{ fontSize: "0.78rem", fontWeight: 800, color: "#0F766E", whiteSpace: "nowrap" }}>Filter Batch:</label>
-          <select
-            value={selectedBatch}
-            onChange={(e) => setSelectedBatch(e.target.value)}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
+          {/* BATCH FILTER DROPDOWN */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "#F0FDFA", border: "1px solid #CCFBF1", padding: "0.4rem 0.75rem", borderRadius: "8px" }}>
+            <Filter size={14} color="#0F766E" />
+            <label style={{ fontSize: "0.78rem", fontWeight: 800, color: "#0F766E", whiteSpace: "nowrap" }}>Batch:</label>
+            <select
+              value={selectedBatch}
+              onChange={(e) => setSelectedBatch(e.target.value)}
+              style={{
+                background: "#FFFFFF",
+                color: "#1F2937",
+                border: "1px solid #99F6E4",
+                borderRadius: "6px",
+                padding: "0.2rem 0.5rem",
+                fontSize: "0.8rem",
+                fontWeight: 700,
+                outline: "none",
+                cursor: "pointer",
+              }}
+            >
+              <option value="ALL">All Batches ({uniqueBatches.length})</option>
+              {uniqueBatches.map(b => (
+                <option key={b} value={b}>Batch #{b}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* EXPORT REGISTER BUTTONS */}
+          <button
+            onClick={() => generateRegisterPDF(documents)}
             style={{
-              background: "#FFFFFF",
-              color: "#1F2937",
-              border: "1px solid #99F6E4",
-              borderRadius: "6px",
-              padding: "0.25rem 0.6rem",
+              padding: "0.48rem 0.95rem",
+              background: "linear-gradient(135deg, #0F766E, #0E7490)",
+              color: "white",
+              borderRadius: "8px",
+              fontWeight: 800,
               fontSize: "0.82rem",
-              fontWeight: 700,
-              outline: "none",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              boxShadow: "0 3px 10px rgba(15, 118, 110, 0.25)",
+              border: "none",
               cursor: "pointer",
+              whiteSpace: "nowrap",
             }}
+            title="Download Official BMR/BPR Issuance & Retrieval Record (QAP-009/F2-02)"
           >
-            <option value="ALL">All Batches ({uniqueBatches.length})</option>
-            {uniqueBatches.map(b => (
-              <option key={b} value={b}>Batch #{b}</option>
-            ))}
-          </select>
+            <Download size={15} />
+            Export Register (PDF)
+          </button>
+
+          <button
+            onClick={() => generateRegisterCSV(documents)}
+            style={{
+              padding: "0.48rem 0.85rem",
+              background: "#FFFFFF",
+              color: "#0F766E",
+              border: "1.5px solid #0D9488",
+              borderRadius: "8px",
+              fontWeight: 800,
+              fontSize: "0.82rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+            title="Export CSV for Excel Analysis"
+          >
+            <FileSpreadsheet size={15} />
+            CSV
+          </button>
         </div>
       </div>
 

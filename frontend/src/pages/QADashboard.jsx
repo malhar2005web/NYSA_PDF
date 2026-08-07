@@ -368,52 +368,7 @@ export function QADashboard() {
           </button>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-          <button
-            onClick={() => generateRegisterPDF(documents)}
-            style={{
-              padding: "0.55rem 1.05rem",
-              background: "linear-gradient(135deg, #0F766E, #0E7490)",
-              color: "white",
-              borderRadius: "10px",
-              fontWeight: 800,
-              fontSize: "0.84rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.45rem",
-              boxShadow: "0 4px 14px rgba(15, 118, 110, 0.3)",
-              border: "none",
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-            }}
-            title="Download Official BMR/BPR Issuance & Retrieval Record (QAP-009/F2-02)"
-          >
-            <Download size={16} />
-            Export Register (PDF)
-          </button>
-
-          <button
-            onClick={() => generateRegisterCSV(documents)}
-            style={{
-              padding: "0.55rem 0.95rem",
-              background: "#FFFFFF",
-              color: "#0F766E",
-              border: "1.5px solid #0D9488",
-              borderRadius: "10px",
-              fontWeight: 800,
-              fontSize: "0.84rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.45rem",
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-            }}
-            title="Export CSV for Excel Analysis"
-          >
-            <FileSpreadsheet size={16} />
-            CSV
-          </button>
-
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
           <button
             onClick={() => {
               setPresetRequisition(null);
@@ -688,7 +643,7 @@ export function QADashboard() {
 
       {/* Tab 3: Read-Only Audit Logs & Batch Progress Stepper */}
       {activeTab === "audit" && (
-        <BatchAuditTimeline auditLogs={auditLogs} />
+        <BatchAuditTimeline auditLogs={auditLogs} documents={documents} />
       )}
 
       {/* Tab 4: RBAC & User Role Management */}
