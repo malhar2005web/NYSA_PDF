@@ -58,8 +58,14 @@ export function generateRegisterPDF(documents = [], filterMeta = {}) {
     }
   }
 
-  // Draw Table using jspdf-autotable
-  autoTable(doc, {
+  // Draw Table using jspdf-autotable safely
+  const renderTable = typeof autoTable === "function" ? autoTable : (typeof doc.autoTable === "function" ? doc.autoTable.bind(doc) : null);
+  if (!renderTable) {
+    console.error("jspdf-autotable is not loaded properly.");
+    return;
+  }
+
+  renderTable(doc, {
     startY: 28,
     margin: { left: 10, right: 10, top: 28, bottom: 18 },
     head: [[

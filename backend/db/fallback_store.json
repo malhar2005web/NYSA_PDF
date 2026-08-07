@@ -34,9 +34,9 @@
       "original_file_path": "uploads/originals/clean_ISS-2026-0807-174.pdf",
       "stamped_file_path": "uploads/bpr/ISS-2026-0807-174_1786079363063.pdf",
       "file_size_bytes": 10970175,
-      "print_count": 0,
+      "print_count": 1,
       "max_allowed_prints": 1,
-      "status": "PENDING_PRINT",
+      "status": "PRINTED",
       "created_by": 1,
       "created_at": "2026-08-07T05:09:23.550Z",
       "custom_fields": []
@@ -529,6 +529,14 @@
       "print_type": "ORIGINAL",
       "ip_address": "::1",
       "printed_at": "2026-08-05T18:08:19.764Z"
+    },
+    {
+      "id": 14,
+      "document_id": 13,
+      "printed_by": 1,
+      "print_type": "ORIGINAL",
+      "ip_address": "::1",
+      "printed_at": "2026-08-07T06:50:52.694Z"
     }
   ],
   "reprint_requests": [
@@ -567,6 +575,16 @@
     }
   ],
   "notifications": [
+    {
+      "id": 27,
+      "recipient_role": "QA_ADMIN",
+      "title": "Document Printed: ISS-2026-0807-174",
+      "message": "Document BPR Batch b-20005 (ISS-2026-0807-174) was printed by Dr. Rajesh Sharma (QA Lead).",
+      "type": "DOCUMENT_PRINTED",
+      "document_id": 13,
+      "is_read": false,
+      "created_at": "2026-08-07T06:50:52.694Z"
+    },
     {
       "id": 1786079197996,
       "user_id": 1,
@@ -815,6 +833,32 @@
     }
   ],
   "audit_logs": [
+    {
+      "id": 53,
+      "document_id": 13,
+      "user_id": 1,
+      "user_name": "Dr. Rajesh Sharma (QA Lead)",
+      "user_role": "QA_ADMIN",
+      "action": "Print Notification Sent",
+      "document_name": "BPR Batch b-20005",
+      "batch_number": "b-20005",
+      "issuance_number": "ISS-2026-0807-174",
+      "details": "QA/Admin notified of Printed execution.",
+      "created_at": "2026-08-07T06:50:52.703Z"
+    },
+    {
+      "id": 52,
+      "document_id": 13,
+      "user_id": 1,
+      "user_name": "Dr. Rajesh Sharma (QA Lead)",
+      "user_role": "QA_ADMIN",
+      "action": "Printed",
+      "document_name": "BPR Batch b-20005",
+      "batch_number": "b-20005",
+      "issuance_number": "ISS-2026-0807-174",
+      "details": "Printed (Total Prints: 1/1) by Dr. Rajesh Sharma (QA Lead)",
+      "created_at": "2026-08-07T06:50:52.698Z"
+    },
     {
       "id": 51,
       "document_id": 13,
