@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { Clock, Shield, User, FileText, CheckCircle2, Check, Filter, Printer, FileCheck, Layers, ChevronDown, ChevronUp, Download, FileSpreadsheet } from "lucide-react";
 import { generateRegisterPDF, generateRegisterCSV } from "../utils/generateRegisterPDF";
+import { ExportRegisterModal } from "./ExportRegisterModal";
 
 export function BatchAuditTimeline({ auditLogs = [], documents = [] }) {
   const [selectedBatch, setSelectedBatch] = useState("ALL");
   const [expandedBatches, setExpandedBatches] = useState({});
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   // Extract unique batch numbers
   const uniqueBatches = Array.from(
@@ -137,7 +139,7 @@ export function BatchAuditTimeline({ auditLogs = [], documents = [] }) {
 
           {/* EXPORT REGISTER BUTTONS */}
           <button
-            onClick={() => generateRegisterPDF(documents)}
+            onClick={() => setIsExportModalOpen(true)}
             style={{
               padding: "0.48rem 0.95rem",
               background: "linear-gradient(135deg, #0F766E, #0E7490)",
@@ -153,7 +155,7 @@ export function BatchAuditTimeline({ auditLogs = [], documents = [] }) {
               cursor: "pointer",
               whiteSpace: "nowrap",
             }}
-            title="Download Official BMR/BPR Issuance & Retrieval Record (QAP-009/F2-02)"
+            title="Configure & Download Official BMR/BPR Issuance & Retrieval Record (QAP-009/F2-02)"
           >
             <Download size={15} />
             Export Register (PDF)
@@ -372,6 +374,13 @@ export function BatchAuditTimeline({ auditLogs = [], documents = [] }) {
           );
         })
       )}
+
+      {/* EXPORT REGISTER MODAL WINDOW */}
+      <ExportRegisterModal
+        isOpen={isExportModalOpen}
+        documents={documents}
+        onClose={() => setIsExportModalOpen(false)}
+      />
     </div>
   );
 }

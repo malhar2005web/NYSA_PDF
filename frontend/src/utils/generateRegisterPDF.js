@@ -7,6 +7,13 @@ import autoTable from "jspdf-autotable";
  * Matches official Nysa Biomed Pvt. Ltd. Satara regulatory register template 1:1.
  */
 export function generateRegisterPDF(documents = [], filterMeta = {}) {
+  const {
+    registerNo = "001",
+    formCode = "(QAP-009/F2-02)",
+    companyName = "Nysa Biomed Pvt.Ltd. Satara.",
+    registerTitle = "BMR/BPR ISSUANCE AND RETRIEVAL RECORD"
+  } = filterMeta;
+
   // Create A4 Landscape PDF (297mm x 210mm)
   const doc = new jsPDF({
     orientation: "landscape",
@@ -143,16 +150,15 @@ export function generateRegisterPDF(documents = [], filterMeta = {}) {
       doc.setTextColor(0, 0, 0);
 
       // Top Left: Company Name
-      doc.text("Nysa Biomed Pvt.Ltd. Satara.", 10, 10);
+      doc.text(companyName, 10, 10);
 
       // Top Center: Document Title
       doc.setFontSize(13);
-      doc.text("BMR/BPR ISSUANCE AND RETRIEVAL RECORD", 10, 18);
+      doc.text(registerTitle, 10, 18);
 
-      // Top Right: Page Number & Logo Badge
+      // Top Right: Page / Register Number & Logo Badge
       doc.setFontSize(9);
-      const pageNumStr = String(data.pageNumber).padStart(3, '0');
-      doc.text(pageNumStr, pageWidth - 35, 10);
+      doc.text(registerNo, pageWidth - 35, 10);
 
       // Simple Nysa logo box graphic
       doc.setLineWidth(0.4);
@@ -173,7 +179,7 @@ export function generateRegisterPDF(documents = [], filterMeta = {}) {
       doc.setTextColor(0, 0, 0);
 
       // Form Code at bottom right
-      doc.text("(QAP-009/F2-02)", pageWidth - 42, pageHeight - 8);
+      doc.text(formCode, pageWidth - 45, pageHeight - 8);
     },
   });
 
