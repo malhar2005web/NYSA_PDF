@@ -1,7 +1,7 @@
 from PIL import Image
 
-input_path = r"d:\Desktop\bhusari sir bmr-bpr\OIP.jpg"
-output_path = r"d:\Desktop\bhusari sir bmr-bpr\frontend\public\completed_stamp.png"
+input_path = r"d:\Desktop\bhusari sir bmr-bpr\image.png"
+output_path = r"d:\Desktop\bhusari sir bmr-bpr\frontend\public\controlled_stamp.png"
 
 img = Image.open(input_path).convert("RGBA")
 datas = img.getdata()
@@ -23,4 +23,4 @@ if bbox:
     img = img.crop(bbox)
 
 img.save(output_path, "PNG")
-print(f"Clean cropped stamp saved to: {output_path}")
+print(f"Clean cropped CONTROLLED stamp saved to: {output_path}")
