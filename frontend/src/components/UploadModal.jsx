@@ -33,7 +33,11 @@ export function UploadModal({ isOpen, presetData, onClose, onSuccess }) {
       setDocTitle("");
       if (presetData) {
         if (presetData.document_type) setDocType(presetData.document_type.toUpperCase());
-        if (presetData.batch_number) setBatchNumber(presetData.batch_number);
+        if (presetData.batch_number && !presetData.batch_number.toLowerCase().includes("pending qa")) {
+          setBatchNumber(presetData.batch_number);
+        } else {
+          setBatchNumber("");
+        }
         if (presetData.requested_by_name) setCustomReceivedBy(presetData.requested_by_name);
       } else {
         setDocType("FORM");

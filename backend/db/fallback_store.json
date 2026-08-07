@@ -23,6 +23,61 @@
   ],
   "documents": [
     {
+      "id": 12,
+      "issuance_number": "ISS-2026-0805-868",
+      "document_type": "BPR",
+      "document_name": "BPR Batch u-6609",
+      "batch_number": "u-6609",
+      "mfg_date": "2026-08-05",
+      "expiry_date": "2029-08-05",
+      "total_pages": 37,
+      "original_file_path": "uploads/originals/clean_ISS-2026-0805-868.pdf",
+      "stamped_file_path": "uploads/bpr/ISS-2026-0805-868_1785953217082.pdf",
+      "file_size_bytes": 10970195,
+      "print_count": 1,
+      "max_allowed_prints": 1,
+      "status": "REPRINT_APPROVED",
+      "created_by": 1,
+      "created_at": "2026-08-05T18:06:57.356Z",
+      "custom_fields": [
+        {
+          "pageIndex": 0,
+          "fieldName": "custom_custom_field_1785953196319_1",
+          "label": "Custom Field 1",
+          "value": "",
+          "x": 138,
+          "y": 284,
+          "width": 140,
+          "height": 22,
+          "fontSize": 11,
+          "color": "#000000",
+          "fontFamily": "Helvetica, sans-serif",
+          "isBold": false,
+          "isCustom": true
+        }
+      ],
+      "allowed_prints": 2
+    },
+    {
+      "id": 11,
+      "issuance_number": "ISS-2026-0805-712",
+      "document_type": "FORM",
+      "document_name": "FORM Batch FORM-2026",
+      "batch_number": "FORM-2026",
+      "mfg_date": "2026-08-05",
+      "expiry_date": "2026-08-05",
+      "total_pages": 37,
+      "original_file_path": "uploads/originals/clean_ISS-2026-0805-712.pdf",
+      "stamped_file_path": "uploads/form/ISS-2026-0805-712_1785953017195.pdf",
+      "file_size_bytes": 10969397,
+      "print_count": 1,
+      "max_allowed_prints": 1,
+      "status": "PRINTED",
+      "created_by": 1,
+      "created_at": "2026-08-05T18:03:37.740Z",
+      "custom_fields": []
+    },
+    {
       "id": 10,
       "issuance_number": "ISS-2026-0805-205",
       "document_type": "FORM",
@@ -249,6 +304,22 @@
   ],
   "document_assignments": [
     {
+      "id": 12,
+      "document_id": 12,
+      "assigned_to_user_id": 2,
+      "assigned_by_user_id": 1,
+      "status": "ISSUED",
+      "created_at": "2026-08-05T18:06:57.356Z"
+    },
+    {
+      "id": 11,
+      "document_id": 11,
+      "assigned_to_user_id": 2,
+      "assigned_by_user_id": 1,
+      "status": "ISSUED",
+      "created_at": "2026-08-05T18:03:37.740Z"
+    },
+    {
       "id": 10,
       "document_id": 10,
       "assigned_to_user_id": 2,
@@ -415,9 +486,36 @@
       "print_type": "ORIGINAL",
       "ip_address": "::1",
       "printed_at": "2026-08-05T00:38:11.939Z"
+    },
+    {
+      "id": 12,
+      "document_id": 11,
+      "printed_by": 1,
+      "print_type": "ORIGINAL",
+      "ip_address": "::1",
+      "printed_at": "2026-08-05T18:04:46.211Z"
+    },
+    {
+      "id": 13,
+      "document_id": 12,
+      "printed_by": 2,
+      "print_type": "ORIGINAL",
+      "ip_address": "::1",
+      "printed_at": "2026-08-05T18:08:19.764Z"
     }
   ],
   "reprint_requests": [
+    {
+      "id": 3,
+      "document_id": 12,
+      "requested_by": 2,
+      "reason": "docs got lost",
+      "status": "APPROVED",
+      "reviewed_by": 1,
+      "review_reason": "",
+      "requested_at": "2026-08-05T18:08:42.131Z",
+      "reviewed_at": "2026-08-05T18:08:55.574Z"
+    },
     {
       "id": 2,
       "document_id": 7,
@@ -442,6 +540,54 @@
     }
   ],
   "notifications": [
+    {
+      "id": 25,
+      "recipient_id": 2,
+      "title": "Reprint Approved: ISS-2026-0805-868",
+      "message": "Your reprint request for ISS-2026-0805-868 has been approved by QA. Exactly 1 additional print is now enabled.",
+      "type": "REPRINT_APPROVED",
+      "document_id": 12,
+      "is_read": false,
+      "created_at": "2026-08-05T18:08:55.574Z"
+    },
+    {
+      "id": 24,
+      "recipient_role": "QA_ADMIN",
+      "title": "Reprint Requested: ISS-2026-0805-868",
+      "message": "Reprint requested for ISS-2026-0805-868 by Amit Verma (Plant Officer). Reason: docs got lost",
+      "type": "REPRINT_REQUESTED",
+      "document_id": 12,
+      "is_read": false,
+      "created_at": "2026-08-05T18:08:42.131Z"
+    },
+    {
+      "id": 23,
+      "recipient_role": "QA_ADMIN",
+      "title": "Document Printed: ISS-2026-0805-868",
+      "message": "Document BPR Batch u-6609 (ISS-2026-0805-868) was printed by Amit Verma (Plant Officer).",
+      "type": "DOCUMENT_PRINTED",
+      "document_id": 12,
+      "is_read": false,
+      "created_at": "2026-08-05T18:08:19.764Z"
+    },
+    {
+      "id": 1785953133773,
+      "user_id": 1,
+      "title": "New BPR Requisition Request",
+      "message": "Batch #u-6609 (paracetemol) requested by Amit Verma (Plant Officer)",
+      "is_read": false,
+      "created_at": "2026-08-05T18:05:33.771Z"
+    },
+    {
+      "id": 21,
+      "recipient_role": "QA_ADMIN",
+      "title": "Document Printed: ISS-2026-0805-712",
+      "message": "Document FORM Batch FORM-2026 (ISS-2026-0805-712) was printed by Dr. Rajesh Sharma (QA Lead).",
+      "type": "DOCUMENT_PRINTED",
+      "document_id": 11,
+      "is_read": false,
+      "created_at": "2026-08-05T18:04:46.211Z"
+    },
     {
       "id": 20,
       "recipient_role": "QA_ADMIN",
@@ -634,6 +780,121 @@
     }
   ],
   "audit_logs": [
+    {
+      "id": 49,
+      "document_id": 12,
+      "user_id": 1,
+      "user_name": "Dr. Rajesh Sharma (QA Lead)",
+      "user_role": "QA_ADMIN",
+      "action": "Reprint Approved",
+      "document_name": "BPR Batch u-6609",
+      "batch_number": "u-6609",
+      "issuance_number": "ISS-2026-0805-868",
+      "details": "Reprint Approved by QA Dr. Rajesh Sharma (QA Lead). ",
+      "created_at": "2026-08-05T18:08:55.575Z"
+    },
+    {
+      "id": 48,
+      "document_id": 12,
+      "user_id": 2,
+      "user_name": "Amit Verma (Plant Officer)",
+      "user_role": "PRODUCTION",
+      "action": "Reprint Requested",
+      "document_name": "BPR Batch u-6609",
+      "batch_number": "u-6609",
+      "issuance_number": "ISS-2026-0805-868",
+      "details": "Reason submitted: \"docs got lost\"",
+      "created_at": "2026-08-05T18:08:42.133Z"
+    },
+    {
+      "id": 47,
+      "document_id": 12,
+      "user_id": 2,
+      "user_name": "Amit Verma (Plant Officer)",
+      "user_role": "PRODUCTION",
+      "action": "Print Notification Sent",
+      "document_name": "BPR Batch u-6609",
+      "batch_number": "u-6609",
+      "issuance_number": "ISS-2026-0805-868",
+      "details": "QA/Admin notified of Printed execution.",
+      "created_at": "2026-08-05T18:08:19.768Z"
+    },
+    {
+      "id": 46,
+      "document_id": 12,
+      "user_id": 2,
+      "user_name": "Amit Verma (Plant Officer)",
+      "user_role": "PRODUCTION",
+      "action": "Printed",
+      "document_name": "BPR Batch u-6609",
+      "batch_number": "u-6609",
+      "issuance_number": "ISS-2026-0805-868",
+      "details": "Printed (Total Prints: 1/1) by Amit Verma (Plant Officer)",
+      "created_at": "2026-08-05T18:08:19.766Z"
+    },
+    {
+      "id": 45,
+      "document_id": 12,
+      "user_id": 1,
+      "user_name": "System",
+      "user_role": "QA_ADMIN",
+      "action": "Document Uploaded",
+      "document_name": "N/A",
+      "batch_number": "N/A",
+      "issuance_number": "N/A",
+      "details": "Issued BPR ISS-2026-0805-868 for Batch u-6609 (Received by Amit Verma ).",
+      "created_at": "2026-08-05T18:06:57.433Z"
+    },
+    {
+      "id": 1785953133772,
+      "action": "REQUISITION_SUBMITTED",
+      "batch_number": "u-6609",
+      "document_name": "BPR for paracetemol",
+      "details": "Production operator Amit Verma (Plant Officer) submitted BPR requisition for Batch #u-6609",
+      "user_id": 2,
+      "user_name": "Amit Verma (Plant Officer)",
+      "user_role": "PRODUCTION",
+      "created_at": "2026-08-05T18:05:33.771Z"
+    },
+    {
+      "id": 43,
+      "document_id": 11,
+      "user_id": 1,
+      "user_name": "Dr. Rajesh Sharma (QA Lead)",
+      "user_role": "QA_ADMIN",
+      "action": "Print Notification Sent",
+      "document_name": "FORM Batch FORM-2026",
+      "batch_number": "FORM-2026",
+      "issuance_number": "ISS-2026-0805-712",
+      "details": "QA/Admin notified of Printed execution.",
+      "created_at": "2026-08-05T18:04:46.217Z"
+    },
+    {
+      "id": 42,
+      "document_id": 11,
+      "user_id": 1,
+      "user_name": "Dr. Rajesh Sharma (QA Lead)",
+      "user_role": "QA_ADMIN",
+      "action": "Printed",
+      "document_name": "FORM Batch FORM-2026",
+      "batch_number": "FORM-2026",
+      "issuance_number": "ISS-2026-0805-712",
+      "details": "Printed (Total Prints: 1/1) by Dr. Rajesh Sharma (QA Lead)",
+      "created_at": "2026-08-05T18:04:46.213Z"
+    },
+    {
+      "id": 41,
+      "document_id": 11,
+      "user_id": 1,
+      "user_name": "System",
+      "user_role": "QA_ADMIN",
+      "action": "Document Uploaded",
+      "document_name": "N/A",
+      "batch_number": "N/A",
+      "issuance_number": "N/A",
+      "details": "Issued FORM ISS-2026-0805-712 for Batch FORM-2026 (Received by Amit Verma (Plant Officer)).",
+      "created_at": "2026-08-05T18:03:37.849Z"
+    },
     {
       "id": 40,
       "document_id": 10,
@@ -1146,6 +1407,19 @@
     }
   ],
   "requisitions": [
+    {
+      "id": 1785953133771,
+      "document_type": "BPR",
+      "product_name": "paracetemol",
+      "batch_number": "u-6609",
+      "batch_size": "Standard",
+      "remarks": "",
+      "status": "ISSUED",
+      "requested_by": 2,
+      "requested_by_name": "Amit Verma (Plant Officer)",
+      "created_at": "2026-08-05T18:05:33.771Z",
+      "fulfilled_at": "2026-08-05T18:06:57.432Z"
+    },
     {
       "id": 1785884661761,
       "document_type": "BPR",

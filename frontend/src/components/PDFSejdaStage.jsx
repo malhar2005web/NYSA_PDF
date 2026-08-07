@@ -143,6 +143,26 @@ export function PDFSejdaStage({
         {issuanceNumber}
       </div>
 
+      {/* LAYER 2B: PAGE 1 COMPLETED GREEN RUBBER STAMP */}
+      {currentPage === 1 && (
+        <img
+          src="/completed_stamp.jpg"
+          alt="Completed Stamp"
+          style={{
+            position: "absolute",
+            top: `${10 * scale}px`,
+            right: `${185 * scale}px`,
+            width: `${105 * scale}px`,
+            height: "auto",
+            objectFit: "contain",
+            pointerEvents: "none",
+            zIndex: 14,
+            opacity: 0.92,
+            mixBlendMode: "multiply",
+          }}
+        />
+      )}
+
       {/* LAYER 3: UNIFIED OVERLAY TEXT FIELDS */}
       {fields
         .filter(f => f.pageIndex === currentPage - 1)

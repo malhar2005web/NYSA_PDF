@@ -187,6 +187,31 @@ export function DocumentViewerModal({ document: doc, isOpen, onClose, onRefresh,
         ctx.fillText(stampText, stampX + 12 * printScale, stampY + 4 * printScale);
         ctx.restore();
 
+        // Composite COMPLETED green rubber stamp on Page 1
+        if (i === 1) {
+          try {
+            const stampImg = new Image();
+            stampImg.src = "/completed_stamp.jpg";
+            await new Promise((resolve) => {
+              stampImg.onload = resolve;
+              stampImg.onerror = resolve;
+            });
+            if (stampImg.complete && stampImg.naturalWidth > 0) {
+              ctx.save();
+              ctx.globalCompositeOperation = "multiply";
+              ctx.globalAlpha = 0.92;
+              const imgW = 105 * printScale;
+              const imgH = (stampImg.naturalHeight / stampImg.naturalWidth) * imgW;
+              const imgX = viewport.width - imgW - 185 * printScale;
+              const imgY = 10 * printScale;
+              ctx.drawImage(stampImg, imgX, imgY, imgW, imgH);
+              ctx.restore();
+            }
+          } catch (e) {
+            console.error("Print canvas stamp error:", e);
+          }
+        }
+
         // Convert canvas to <img> (more reliable for print than raw canvas)
         const img = document.createElement("img");
         img.src = canvas.toDataURL("image/png");

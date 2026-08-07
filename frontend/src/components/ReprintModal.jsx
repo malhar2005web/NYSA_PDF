@@ -190,7 +190,6 @@ export function ReviewReprintModal({ request: reqItem, isOpen, onClose, onSucces
 export function RequestBmrBprModal({ isOpen, onClose, onSuccess }) {
   const [docType, setDocType] = useState("BMR");
   const [productName, setProductName] = useState("");
-  const [batchNumber, setBatchNumber] = useState("");
   const [batchSize, setBatchSize] = useState("");
   const [remarks, setRemarks] = useState("");
   const [loading, setLoading] = useState(false);
@@ -200,8 +199,8 @@ export function RequestBmrBprModal({ isOpen, onClose, onSuccess }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!productName || !batchNumber) {
-      setError("Product Name and Batch Number are required.");
+    if (!productName) {
+      setError("Product Name is required.");
       return;
     }
 
@@ -215,7 +214,7 @@ export function RequestBmrBprModal({ isOpen, onClose, onSuccess }) {
         body: JSON.stringify({
           document_type: docType,
           product_name: productName,
-          batch_number: batchNumber,
+          batch_number: "Pending QA Allocation",
           batch_size: batchSize,
           remarks
         }),
@@ -226,7 +225,6 @@ export function RequestBmrBprModal({ isOpen, onClose, onSuccess }) {
         onSuccess(data.message || "Requisition submitted successfully");
         onClose();
         setProductName("");
-        setBatchNumber("");
         setBatchSize("");
         setRemarks("");
       } else {
@@ -368,20 +366,10 @@ export function RequestBmrBprModal({ isOpen, onClose, onSuccess }) {
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Batch Number *</label>
-            <div style={{ position: "relative" }}>
-              <Hash size={18} style={{ position: "absolute", left: "12px", top: "12px", color: "#0D9488" }} />
-              <input
-                type="text"
-                className="form-input"
-                style={{ paddingLeft: "38px" }}
-                placeholder="e.g. B-2005"
-                value={batchNumber}
-                onChange={(e) => setBatchNumber(e.target.value)}
-                required
-              />
-            </div>
+          <div style={{ background: "#F0FDFA", border: "1px solid #99F6E4", borderRadius: "8px", padding: "0.75rem 1rem", marginBottom: "1.25rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <span style={{ fontSize: "0.82rem", color: "#0F766E", fontWeight: 700 }}>
+              💡 <strong>Batch Number:</strong> Will be assigned & fed exclusively by QA Admin during document issuance.
+            </span>
           </div>
 
           <div className="form-group">
