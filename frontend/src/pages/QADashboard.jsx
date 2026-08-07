@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
 import {
   FileText, Upload, Printer, AlertTriangle, CheckCircle, Clock, Search,
-  Filter, Eye, Edit3, Send, ShieldAlert, ChevronRight, FileCheck, Plus, XCircle, User
+  Filter, Eye, Edit3, Send, ShieldAlert, ChevronRight, FileCheck, Plus, XCircle, User,
+  Download, FileSpreadsheet
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { UploadModal } from "../components/UploadModal";
@@ -9,6 +9,7 @@ import { DocumentViewerModal } from "../components/DocumentViewerModal";
 import { ReviewReprintModal } from "../components/ReprintModal";
 import { BatchAuditTimeline } from "../components/BatchAuditTimeline";
 import { RBACManagement } from "../components/RBACManagement";
+import { generateRegisterPDF, generateRegisterCSV } from "../utils/generateRegisterPDF";
 
 function renderStatusBadge(statusRaw) {
   const status = (statusRaw || "ISSUED").toUpperCase();
@@ -366,7 +367,52 @@ export function QADashboard() {
           </button>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+          <button
+            onClick={() => generateRegisterPDF(documents)}
+            style={{
+              padding: "0.55rem 1.05rem",
+              background: "linear-gradient(135deg, #0F766E, #0E7490)",
+              color: "white",
+              borderRadius: "10px",
+              fontWeight: 800,
+              fontSize: "0.84rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.45rem",
+              boxShadow: "0 4px 14px rgba(15, 118, 110, 0.3)",
+              border: "none",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+            title="Download Official BMR/BPR Issuance & Retrieval Record (QAP-009/F2-02)"
+          >
+            <Download size={16} />
+            Export Register (PDF)
+          </button>
+
+          <button
+            onClick={() => generateRegisterCSV(documents)}
+            style={{
+              padding: "0.55rem 0.95rem",
+              background: "#FFFFFF",
+              color: "#0F766E",
+              border: "1.5px solid #0D9488",
+              borderRadius: "10px",
+              fontWeight: 800,
+              fontSize: "0.84rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.45rem",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+            title="Export CSV for Excel Analysis"
+          >
+            <FileSpreadsheet size={16} />
+            CSV
+          </button>
+
           <button
             onClick={() => {
               setPresetRequisition(null);
