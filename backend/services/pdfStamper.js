@@ -114,6 +114,7 @@ function drawHeaderStampBox(page, stampText, font, size, blackColor) {
 export async function stampDocumentPDF({
   inputPath,
   outputPath,
+  pdfBuffer,
   issuanceNumber,
   documentType = "BMR",
   batchNumber = "",
@@ -125,7 +126,8 @@ export async function stampDocumentPDF({
   fileMappings = [],
 }) {
   try {
-    const pdfBytes = fs.readFileSync(inputPath);
+    const pdfBytes = pdfBuffer || (inputPath ? fs.readFileSync(inputPath) : null);
+    if (!pdfBytes) throw new Error("No PDF buffer or input path provided for stamping");
     const pdfDoc = await PDFDocument.load(pdfBytes);
 
     const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -249,27 +251,34 @@ export async function stampDocumentPDF({
       }
     }
 
-    const stampedPdfBytes = await pdfDoc.save();
-
-    const dir = path.dirname(outputPath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+    if (outputPath) {
+      try {
+        const dir = path.dirname(outputPath);
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+        fs.writeFileSync(outputPath, stampedPdfBytes);
+      } catch (e) {
+        console.warn("Could not write to outputPath:", e.message);
+      }
     }
-
-    fs.writeFileSync(outputPath, stampedPdfBytes);
 
     return {
       success: true,
       pageCount: pages.length,
-      stampedPath: outputPath,
+      stampedBuffer: Buffer.from(stampedPdfBytes),
+      stampedPath: outputPath || null,
     };
   } catch (error) {
     console.error("PDF Generation Engine Error:", error);
     try {
-      const dir = path.dirname(outputPath);
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-      fs.copyFileSync(inputPath, outputPath);
-      return { success: true, pageCount: 1, stampedPath: outputPath, warning: error.message };
+      if (outputPath && inputPath) {
+        const dir = path.dirname(outputPath);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        fs.copyFileSync(inputPath, outputPath);
+        return { success: true, pageCount: 1, stampedPath: outputPath, warning: error.message };
+      }
+      throw error;
     } catch (e) {
       throw new Error("Failed to process PDF generation: " + error.message);
     }

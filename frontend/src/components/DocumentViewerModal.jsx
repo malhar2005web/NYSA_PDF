@@ -18,7 +18,17 @@ export function DocumentViewerModal({ document: doc, isOpen, onClose, onRefresh,
   const [msg, setMsg] = useState("");
   const [isError, setIsError] = useState(false);
 
-  const pdfUrl = doc?.original_file_path ? `/${doc.original_file_path}` : (doc?.stamped_file_path ? `/${doc.stamped_file_path}` : "/bmr.pdf");
+  const resolvePdfUrl = (filePath) => {
+    if (!filePath) return null;
+    if (filePath.startsWith("http://") || filePath.startsWith("https://")) return filePath;
+    if (filePath.startsWith("/")) return filePath;
+    return `/${filePath}`;
+  };
+
+  const pdfUrl =
+    resolvePdfUrl(doc?.original_file_path) ||
+    resolvePdfUrl(doc?.stamped_file_path) ||
+    "/bmr.pdf";
   const isProduction = user?.role === "PRODUCTION";
   const printCount = doc?.print_count || 0;
   const allowedPrints = doc?.allowed_prints || 1;

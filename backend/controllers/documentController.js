@@ -1,6 +1,7 @@
 import { query, getFallbackStore, saveFallbackStore } from "../db/index.js";
 import { stampDocumentPDF } from "../services/pdfStamper.js";
 import { recordAuditLog } from "../services/auditService.js";
+import { downloadBufferFromStorage, uploadBufferToStorage } from "../services/storageService.js";
 import fs from "fs";
 import path from "path";
 
@@ -43,15 +44,12 @@ async function generateIssuanceNumber() {
 }
 
 /**
- * Preview Uploaded Document & Launch Sejda Editor
+ * Preview Uploaded Document (Supports both Supabase Direct Storage and Local File)
  */
 export async function previewDocument(req, res) {
   try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: "No PDF file uploaded" });
-    }
-
     const {
+      storage_path,
       document_type,
       batch_number,
       mfg_date,
@@ -63,30 +61,48 @@ export async function previewDocument(req, res) {
 
     const issuance_number = custom_issuance_number || (await generateIssuanceNumber());
 
-    const tempFilename = `preview_${Date.now()}_${req.file.originalname}`;
-    const tempPath = path.join("uploads", "temp_previews", tempFilename);
-
-    const tempDir = path.dirname(tempPath);
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
+    // 1. Supabase Cloud Storage path
+    if (storage_path) {
+      return res.status(200).json({
+        success: true,
+        previewData: {
+          storage_path,
+          issuance_number,
+          document_type,
+          batch_number,
+          mfg_date,
+          expiry_date,
+          issued_by,
+          issued_date,
+        },
+      });
     }
 
-    fs.copyFileSync(req.file.path, tempPath);
-    try { fs.unlinkSync(req.file.path); } catch (e) { }
+    // 2. Traditional Local File upload fallback
+    if (req.file) {
+      const tempFilename = `preview_${Date.now()}_${req.file.originalname}`;
+      const tempPath = path.join("uploads", "temp_previews", tempFilename);
+      const tempDir = path.dirname(tempPath);
+      if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+      fs.copyFileSync(req.file.path, tempPath);
+      try { fs.unlinkSync(req.file.path); } catch (e) {}
 
-    return res.status(200).json({
-      success: true,
-      previewData: {
-        temp_original_path: tempPath.replace(/\\/g, "/"),
-        issuance_number,
-        document_type,
-        batch_number,
-        mfg_date,
-        expiry_date,
-        issued_by,
-        issued_date,
-      },
-    });
+      return res.status(200).json({
+        success: true,
+        previewData: {
+          temp_original_path: tempPath.replace(/\\/g, "/"),
+          issuance_number,
+          document_type,
+          batch_number,
+          mfg_date,
+          expiry_date,
+          issued_by,
+          issued_date,
+        },
+      });
+    }
+
+    return res.status(400).json({ success: false, message: "No PDF file or storage path provided" });
   } catch (error) {
     console.error("Preview Document Error:", error);
     return res.status(500).json({ success: false, message: error.message });
@@ -99,6 +115,7 @@ export async function previewDocument(req, res) {
 export async function confirmDocumentIssuance(req, res) {
   try {
     const {
+      storage_path,
       temp_original_path,
       issuance_number: customIssuanceNum,
       document_type,
@@ -116,40 +133,69 @@ export async function confirmDocumentIssuance(req, res) {
     } = req.body;
 
     const issuance_number = customIssuanceNum || (await generateIssuanceNumber());
+    let stampResult = null;
+    let finalPublicFilePath = "";
+    let finalCleanFilePath = "";
+    let fileSizeBytes = 0;
 
-    const subDir = (document_type || "BMR").toLowerCase();
-    const finalFilename = `${issuance_number}_${Date.now()}.pdf`;
-    const relativePath = path.join("uploads", subDir, finalFilename).replace(/\\/g, "/");
-    const absoluteOutputPath = path.resolve(relativePath);
+    // A. CLOUD SUPABASE STORAGE FLOW (Runs on Vercel)
+    if (storage_path) {
+      const originalBuffer = await downloadBufferFromStorage(storage_path);
+      stampResult = await stampDocumentPDF({
+        pdfBuffer: originalBuffer,
+        issuanceNumber: issuance_number,
+        documentType: document_type,
+        batchNumber: batch_number,
+        mfgDate: mfg_date,
+        expiryDate: expiry_date,
+        issuedBy: issued_by,
+        issuedDate: issued_date,
+        receivedBy: received_by,
+        fileMappings: file_mappings,
+      });
 
-    const absoluteInputPath = path.resolve(temp_original_path);
+      const subDir = (document_type || "BMR").toLowerCase();
+      const stampedStoragePath = `stamped/${subDir}/${issuance_number}_stamped.pdf`;
+      const uploadResult = await uploadBufferToStorage(stampedStoragePath, stampResult.stampedBuffer);
 
-    if (!fs.existsSync(absoluteInputPath)) {
-      return res.status(400).json({ success: false, message: "Temp preview file expired or missing." });
+      finalPublicFilePath = uploadResult.publicUrl;
+      finalCleanFilePath = storage_path;
+      fileSizeBytes = stampResult.stampedBuffer.length;
+    } 
+    // B. LOCAL DISK FLOW (Runs on Local Dev Machine)
+    else if (temp_original_path) {
+      const absoluteInputPath = path.resolve(temp_original_path);
+      const subDir = (document_type || "BMR").toLowerCase();
+      const finalFilename = `${issuance_number}_${Date.now()}.pdf`;
+      const relativePath = path.join("uploads", subDir, finalFilename).replace(/\\/g, "/");
+      const absoluteOutputPath = path.resolve(relativePath);
+
+      const origDir = path.join("uploads", "originals");
+      if (!fs.existsSync(origDir)) fs.mkdirSync(origDir, { recursive: true });
+      const cleanOriginalRelativePath = path.join(origDir, `clean_${issuance_number}.pdf`).replace(/\\/g, "/");
+      fs.copyFileSync(absoluteInputPath, path.resolve(cleanOriginalRelativePath));
+
+      stampResult = await stampDocumentPDF({
+        inputPath: absoluteInputPath,
+        outputPath: absoluteOutputPath,
+        issuanceNumber: issuance_number,
+        documentType: document_type,
+        batchNumber: batch_number,
+        mfgDate: mfg_date,
+        expiryDate: expiry_date,
+        issuedBy: issued_by,
+        issuedDate: issued_date,
+        receivedBy: received_by,
+        fileMappings: file_mappings,
+      });
+
+      finalPublicFilePath = relativePath;
+      finalCleanFilePath = cleanOriginalRelativePath;
+      fileSizeBytes = fs.statSync(absoluteOutputPath).size;
+      try { fs.unlinkSync(absoluteInputPath); } catch (e) {}
+    } else {
+      return res.status(400).json({ success: false, message: "Missing document source path" });
     }
-
-    // Persist clean base original PDF file in uploads/originals/
-    const origDir = path.join("uploads", "originals");
-    if (!fs.existsSync(origDir)) {
-      fs.mkdirSync(origDir, { recursive: true });
-    }
-    const cleanOriginalRelativePath = path.join(origDir, `clean_${issuance_number}.pdf`).replace(/\\/g, "/");
-    fs.copyFileSync(absoluteInputPath, path.resolve(cleanOriginalRelativePath));
-
-    const stampResult = await stampDocumentPDF({
-      inputPath: absoluteInputPath,
-      outputPath: absoluteOutputPath,
-      issuanceNumber: issuance_number,
-      documentType: document_type,
-      batchNumber: batch_number,
-      mfgDate: mfg_date,
-      expiryDate: expiry_date,
-      issuedBy: issued_by,
-      issuedDate: issued_date,
-      receivedBy: received_by,
-      fileMappings: file_mappings,
-      customFields: custom_fields,
-    });
 
     let newDoc = null;
     let assignment = null;
@@ -158,8 +204,8 @@ export async function confirmDocumentIssuance(req, res) {
       const docRes = await query(
         `INSERT INTO documents (
           issuance_number, document_type, document_name, batch_number,
-          mfg_date, expiry_date, total_pages, original_file_path,
-          stamped_file_path, file_size_bytes, created_by, status
+          mfg_date, expiry_date, page_count, file_path,
+          stamped_file_path, file_size, uploaded_by, status
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'PENDING_PRINT')
         RETURNING *`,
         [
@@ -170,18 +216,17 @@ export async function confirmDocumentIssuance(req, res) {
           mfg_date,
           expiry_date,
           stampResult.pageCount || 1,
-          cleanOriginalRelativePath,
-          relativePath,
-          fs.statSync(absoluteOutputPath).size,
+          finalCleanFilePath,
+          finalPublicFilePath,
+          fileSizeBytes,
           req.user.id,
         ]
       );
 
       newDoc = { ...docRes.rows[0], custom_fields: custom_fields || [] };
-
       const targetAssignedUserId = assigned_to_user_id ? parseInt(assigned_to_user_id, 10) : 2;
       const assignRes = await query(
-        `INSERT INTO document_assignments (document_id, assigned_to_user_id, assigned_by_user_id)
+        `INSERT INTO document_assignments (document_id, assigned_to, assigned_by)
          VALUES ($1, $2, $3) RETURNING *`,
         [newDoc.id, targetAssignedUserId, req.user.id]
       );
@@ -198,14 +243,14 @@ export async function confirmDocumentIssuance(req, res) {
         batch_number,
         mfg_date,
         expiry_date,
-        total_pages: stampResult.pageCount || 1,
-        original_file_path: cleanOriginalRelativePath,
-        stamped_file_path: relativePath,
-        file_size_bytes: fs.statSync(absoluteOutputPath).size,
+        page_count: stampResult.pageCount || 1,
+        file_path: finalCleanFilePath,
+        stamped_file_path: finalPublicFilePath,
+        file_size: fileSizeBytes,
         print_count: 0,
-        max_allowed_prints: 1,
+        allowed_prints: 1,
         status: "PENDING_PRINT",
-        created_by: req.user.id,
+        uploaded_by: req.user.id,
         created_at: new Date().toISOString(),
         custom_fields: custom_fields || [],
       };
@@ -215,8 +260,8 @@ export async function confirmDocumentIssuance(req, res) {
       assignment = {
         id: store.document_assignments ? store.document_assignments.length + 1 : 1,
         document_id: newDoc.id,
-        assigned_to_user_id: targetAssignedUserId,
-        assigned_by_user_id: req.user.id,
+        assigned_to: targetAssignedUserId,
+        assigned_by: req.user.id,
         status: "ISSUED",
         created_at: new Date().toISOString(),
       };
@@ -257,7 +302,7 @@ export async function confirmDocumentIssuance(req, res) {
     }
 
     await recordAuditLog({
-      documentId: newDoc.id,
+      documentId: newDoc ? newDoc.id : null,
       userId: req.user.id,
       userRole: req.user.role,
       action: "Document Uploaded",
@@ -265,14 +310,13 @@ export async function confirmDocumentIssuance(req, res) {
       ipAddress: req.ip,
     });
 
-    try { fs.unlinkSync(absoluteInputPath); } catch (e) { }
-
     return res.status(201).json({
       success: true,
       message: "Document issued successfully and sent to Production.",
       issuance_number,
       document: newDoc,
       assignment,
+      publicUrl: finalPublicFilePath,
     });
   } catch (error) {
     console.error("Confirm Issuance Error:", error);

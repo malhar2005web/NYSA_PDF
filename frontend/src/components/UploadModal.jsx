@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { UploadCloud, X, FileCheck, CheckCircle2, Eye, Send, ArrowLeft, AlertCircle, Edit3 } from "lucide-react";
 import { PDFSejdaEditor } from "./PDFSejdaEditor";
+import { uploadPDFToSupabaseDirect } from "../utils/directStorageUpload";
 
 export function UploadModal({ isOpen, presetData, onClose, onSuccess }) {
   const [docType, setDocType] = useState("BMR");
@@ -93,31 +94,71 @@ export function UploadModal({ isOpen, presetData, onClose, onSuccess }) {
     setError("");
 
     try {
-      const formData = new FormData();
-      formData.append("pdf", file);
-      formData.append("document_type", finalType);
-      formData.append("batch_number", effectiveBatchNumber);
-      formData.append("mfg_date", effectiveMfgDate);
-      formData.append("expiry_date", effectiveExpiryDate);
-      formData.append("issued_by", issuedBy);
-      formData.append("issued_date", issuedDate);
-      formData.append("custom_issuance_number", issuanceNumber);
+      let previewResult = null;
+      const fileBlobUrl = URL.createObjectURL(file);
 
-      const res = await fetch("/api/v1/documents/preview", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (data.success && data.previewData) {
-        setPreviewData({
-          ...data.previewData,
-          document_name: docTitle || `${finalType} ${effectiveBatchNumber}`,
+      // Attempt Supabase Direct Storage Upload (Optimal for Vercel Serverless to bypass 4.5MB payload limit)
+      try {
+        const uploadRes = await uploadPDFToSupabaseDirect(file, "originals");
+        const res = await fetch("/api/v1/documents/preview", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            storage_path: uploadRes.path,
+            document_type: finalType,
+            batch_number: effectiveBatchNumber,
+            mfg_date: effectiveMfgDate,
+            expiry_date: effectiveExpiryDate,
+            issued_by: issuedBy,
+            issued_date: issuedDate,
+            custom_issuance_number: issuanceNumber,
+          }),
         });
-        setIsEditorOpen(true);
-      } else {
-        setError(data.message || "Failed to load interactive editor");
+
+        const data = await res.json();
+        if (data.success && data.previewData) {
+          previewResult = {
+            ...data.previewData,
+            storage_url: uploadRes.publicUrl,
+            fileBlobUrl,
+            document_name: docTitle || `${finalType} ${effectiveBatchNumber}`,
+          };
+        }
+      } catch (cloudErr) {
+        console.warn("Direct cloud upload skipped/failed, attempting traditional upload:", cloudErr.message);
       }
+
+      // Fallback: If cloud upload didn't succeed, fallback to standard multipart form-data (Local dev mode)
+      if (!previewResult) {
+        const formData = new FormData();
+        formData.append("pdf", file);
+        formData.append("document_type", finalType);
+        formData.append("batch_number", effectiveBatchNumber);
+        formData.append("mfg_date", effectiveMfgDate);
+        formData.append("expiry_date", effectiveExpiryDate);
+        formData.append("issued_by", issuedBy);
+        formData.append("issued_date", issuedDate);
+        formData.append("custom_issuance_number", issuanceNumber);
+
+        const res = await fetch("/api/v1/documents/preview", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (data.success && data.previewData) {
+          previewResult = {
+            ...data.previewData,
+            fileBlobUrl,
+            document_name: docTitle || `${finalType} ${effectiveBatchNumber}`,
+          };
+        } else {
+          throw new Error(data.message || "Failed to load interactive editor");
+        }
+      }
+
+      setPreviewData(previewResult);
+      setIsEditorOpen(true);
     } catch (err) {
       setError("Error opening interactive PDF editor: " + err.message);
     } finally {
@@ -177,7 +218,11 @@ export function UploadModal({ isOpen, presetData, onClose, onSuccess }) {
       {/* ---------------------------------------------------- */}
       {isEditorOpen && previewData && (
         <PDFSejdaEditor
-          pdfUrl={`/${previewData.temp_original_path}`}
+          pdfUrl={
+            previewData.fileBlobUrl ||
+            previewData.storage_url ||
+            (previewData.temp_original_path ? `/${previewData.temp_original_path}` : "/bmr.pdf")
+          }
           issuanceNumber={issuanceNumber}
           initialData={{
             document_type: finalType,

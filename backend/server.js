@@ -62,13 +62,19 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: err.message || "Internal Server Error" });
 });
 
-// Start Server after Database Initialization
-initDB()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`🚀 Pharma BMR/BPR Backend Server running on http://localhost:${PORT}`);
+// Start Server locally if not running on Vercel
+if (!process.env.VERCEL) {
+  initDB()
+    .then(() => {
+      app.listen(PORT, () => {
+        console.log(`🚀 Pharma BMR/BPR Backend Server running on http://localhost:${PORT}`);
+      });
+    })
+    .catch((err) => {
+      console.error("Failed to initialize system backend:", err);
     });
-  })
-  .catch((err) => {
-    console.error("Failed to initialize system backend:", err);
-  });
+} else {
+  initDB().catch(console.error);
+}
+
+export default app;
