@@ -10,12 +10,22 @@ dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 const { Pool } = pg;
 
+const defaultDatabaseUrl =
+  "postgresql://postgres.gwfpwowtfqhjukamaicb:NYSA%40123BMRBPR@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres";
+
+const connStr = process.env.DATABASE_URL || defaultDatabaseUrl;
+const isRemoteOrSupabase =
+  connStr.includes("supabase.co") ||
+  connStr.includes("supabase.com") ||
+  connStr.includes("pooler.supabase") ||
+  connStr.includes("aws-0-");
+
 const poolConfig = {
-  connectionString: process.env.DATABASE_URL || "postgres://postgres:postgres@localhost:5432/pharma_bmr_bpr",
-  connectionTimeoutMillis: 3000,
+  connectionString: connStr,
+  connectionTimeoutMillis: 8000,
+  ssl: isRemoteOrSupabase ? { rejectUnauthorized: false } : false,
 };
 
 export const pool = new Pool(poolConfig);

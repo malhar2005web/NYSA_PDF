@@ -43,13 +43,24 @@ app.use(
 // Serve static PDF uploads folder
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// API Endpoints
+// API Endpoints (Support both /api/v1/... and stripped /v1/... from Vercel rewrites)
 app.use("/api/v1/auth", authRoutes);
+app.use("/v1/auth", authRoutes);
+
 app.use("/api/v1/documents", documentRoutes);
+app.use("/v1/documents", documentRoutes);
+
 app.use("/api/v1/prints", printRoutes);
+app.use("/v1/prints", printRoutes);
+
 app.use("/api/v1/audit", auditRoutes);
+app.use("/v1/audit", auditRoutes);
+
 app.use("/api/v1/notifications", notificationRoutes);
+app.use("/v1/notifications", notificationRoutes);
+
 app.use("/api/v1/requisitions", requisitionRoutes);
+app.use("/v1/requisitions", requisitionRoutes);
 
 // Health Check Endpoint
 app.get("/api/health", (req, res) => {

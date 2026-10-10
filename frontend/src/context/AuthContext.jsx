@@ -17,7 +17,10 @@ export function AuthProvider({ children }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
+      if (!data) {
+        return { success: false, message: `Server returned ${res.status}: ${res.statusText || "Service Unavailable"}` };
+      }
       if (data.success && data.user) {
         setUser(data.user);
         setToken(data.token);
@@ -27,7 +30,7 @@ export function AuthProvider({ children }) {
       }
       return { success: false, message: data.message || "Invalid credentials" };
     } catch (e) {
-      return { success: false, message: "Network connection error" };
+      return { success: false, message: `Network error (${e.message})` };
     }
   }
 
